@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accueil — Mekapharm SAV (maquette)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="dashboard">
+
+<template id="page-content">
+  <div class="breadcrumb">Mekapharm SAV <span class="sep">/</span> Tableau de bord</div>
+  <h1 class="page-title">Vue d'ensemble du parc</h1>
+  <p class="page-sub" id="todayLbl">Tableau de bord SAV</p>
+
+  <!-- ═══ SÉMAPHORE (remplace les 4 KPI actuels) ═══ -->
+  <nav class="semaphore note-host" aria-label="État du parc">
+    <button class="sem-card" data-f="agir"><div class="sem-num">3</div>
+      <div><div class="sem-lbl"><span class="pulse"></span>Agir maintenant</div><div class="sem-sub">dont 1 bascule &lt; 2 h</div></div></button>
+    <button class="sem-card" data-f="surveiller"><div class="sem-num">7</div>
+      <div><div class="sem-lbl">À surveiller</div><div class="sem-sub">dérive, seuil non franchi</div></div></button>
+    <button class="sem-card" data-f="muet"><div class="sem-num">4</div>
+      <div><div class="sem-lbl">Silence radio</div><div class="sem-sub">aucune télémétrie &gt; 24 h</div></div></button>
+    <button class="sem-card" data-f="ok"><div class="sem-num">212</div>
+      <div><div class="sem-lbl">Nominal</div><div class="sem-sub">96 % actives 48 h</div></div></button>
+    <span class="note" style="top:-11px; left:0;">R3.2 — 3 états + silence radio (R1.2) · remplace les 4 KPI "meubles/plateaux/alertes"</span>
+  </nav>
+
+  <!-- ═══ BANNIÈRE RÉGRESSION MAJ ═══ -->
+  <div class="maj-banner note-host">
+    <div class="h">⚠ Régression suspecte post-MAJ</div>
+    <p><b>OMEGA v3.10.15</b> — erreurs de déplacement médianes <b>+58 %</b> sur les <b>9 machines</b> migrées depuis le 12 juin. 2 pharmacies déjà dans la file ci-dessous.</p>
+    <span class="note" style="top:-11px; right:10px;">R1.7 — SOFTWARE_VERSION × ERR_OCCURRENCE_JOUR</span>
+  </div>
+
+  <div class="grid-2">
+    <!-- ═══ TABLEAU ALERTES/ERREURS — accordéon par pharmacie (structure conservée) ═══ -->
+    <section class="panel note-host">
+      <div class="panel-head">
+        <span class="panel-title">Recommandations d'action</span>
+        <div class="conf-filter note-host" id="confFilters" style="margin-left:14px;">
+          <span class="clbl">confiance</span>
+          <button class="chip active" data-k="all">Toutes</button>
+          <button class="chip" data-k="sur">sûr</button>
+          <button class="chip" data-k="probable">probable</button>
+          <button class="chip" data-k="hypothese">hypothèse</button>
+          <span class="note" style="top:-11px; left:0;">R5.5 — le hotliner filtre par niveau de confiance</span>
+        </div>
+        <span class="panel-sub">tri : dégradation récente — chevron = détail · ligne = fiche</span>
+      </div>
+      <div class="chips" id="compFilters" style="padding:8px 20px 4px;">
+        <button class="chip active" data-c="all">Tous composants</button>
+        <button class="chip" data-c="OMEGA">OMEGA</button>
+        <button class="chip" data-c="ASC">ASC</button>
+        <button class="chip" data-c="ALPHA">ALPHA</button>
+        <button class="chip" data-c="VBAPOCOM">VBAPOCOM</button>
+      </div>
+      <table class="tbl" id="alertTable">
+        <thead><tr>
+          <th style="width:52px;"></th><th>Pharmacie · recommandation</th>
+          <th style="width:96px;">Tendance</th><th style="width:70px;">Depuis</th>
+        </tr></thead>
+        <tbody id="alertBody"></tbody>
+      </table>
+      <div class="ok-fold note-host">
+        <div class="dotgrid" id="dotgrid"></div>
+        <div><b>212 pharmacies nominales</b> — rien à lire ici.
+          <a href="pharmacies.html" style="color:var(--ink-dim);">Voir le parc complet →</a></div>
+        <span class="note" style="top:-10px; left:14px;">R3.7 — le nominal se compte, ne se pagine pas</span>
+      </div>
+      <span class="note" style="top:-11px; left:14px;">R5.1 moteur de reco (règles déterministes + confiance, batch nocturne) · R1.3 file priorisée · clic chevron = facteurs + script + feedback</span>
+    </section>
+
+    <!-- ═══ RAIL DROIT ═══ -->
+    <aside class="stack">
+      <!-- encart moteur de recommandation -->
+      <div class="panel engine-card note-host">
+        <div class="eh">Moteur de recommandation</div>
+        <div class="et"><b>14 recommandations</b> ce matin · <b>87 %</b> jugées utiles (30 j)</div>
+        <div class="em"><span class="live"></span>recalcul nocturne — dernier passage 03:12</div>
+        <span class="note" style="top:-11px; right:10px;">R5.2 · R7 — score & recos précalculés cette nuit (batch parc > 1000)</span>
+      </div>
+
+      <!-- top erreurs — filtre FONCTIONNEL -->
+      <div class="panel note-host">
+        <div class="panel-head">
+          <span class="panel-title">Top erreurs — 7 jours</span>
+          <select class="sel" id="typeSel" style="margin-left:auto;">
+            <option value="all">Tous types</option>
+            <option value="omega">Omega</option>
+            <option value="ascenseurs">Ascenseurs</option>
+            <option value="alpha">Alpha</option>
+            <option value="vbapocom">VBapocom</option>
+          </select>
+        </div>
+        <div style="padding:14px 18px;" id="topErrChart"></div>
+        <span class="note" style="top:-11px; left:10px;">R4e — le filtre agit vraiment (aujourd'hui : select mort)</span>
+      </div>
+
+      <!-- silence radio -->
+      <div class="panel note-host">
+        <div class="panel-head"><span class="panel-title">Silence radio</span><span class="panel-sub">4 machines</span></div>
+        <div id="muettesList"></div>
+        <span class="note" style="top:-11px; left:10px;">R1.2 — nominatif, plus un simple % global 48 h</span>
+      </div>
+
+      <!-- pièces fin de vie -->
+      <div class="panel note-host">
+        <div class="panel-head"><span class="panel-title">Pièces — fin de vie projetée</span>
+          <a class="panel-sub" href="pieces.html" style="text-decoration:none;">tout voir →</a></div>
+        <div id="wearList"></div>
+        <span class="note" style="top:-11px; left:10px;">R1.6 — extrapolation du rythme d'usure hebdo</span>
+      </div>
+    </aside>
+  </div>
+</template>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('todayLbl').textContent =
+    new Date().toLocaleDateString('fr-FR',{day:'2-digit', month:'long', year:'numeric'}) + ' — Tableau de bord SAV';
+
+  /* ── file de recommandations : une pharmacie dégradée = une reco ── */
+  let semFilter = 'all', compFilter = 'all', confFilter = 'all';
+  const body = document.getElementById('alertBody');
+
+  function render(){
+    const rows = PHARMACIES.filter(p => p.etat !== 'ok')
+      .filter(p => semFilter==='all' || p.etat===semFilter)
+      .filter(p => confFilter==='all' || (p.reco && p.reco.confiance===confFilter))
+      .filter(p => compFilter==='all' ||
+        p.composants.some(c => c.n.toUpperCase().startsWith(compFilter) && (c.s==='warn'||c.s==='err')) ||
+        (compFilter==='VBAPOCOM' && p.tag==='Plateaux') || (compFilter==='VBAPOCOM' && p.tag==='VBapocom'));
+    body.innerHTML = rows.map((p,i) => {
+      const r = p.reco;
+      const navAttr = `onclick="if(!event.target.closest('.reco-chev')) location.href='machine.html?m=${p.machinePrincipale}'"`;
+      const head = `
+        <tr class="grp-head rise" style="animation-delay:${i*40}ms; cursor:pointer;" data-pid="${p.id}" ${navAttr}>
+          <td>
+            ${r ? `<button class="reco-chev" data-toggle="${i}" aria-label="Détail recommandation">▶</button>` : `<div class="grade-box ${p.etat}">${p.grade}</div>`}
+          </td>
+          <td>
+            <div class="reco-line">
+              ${r ? actBadge(r.action, true) : `<span class="badge ${p.etat==='muet'?'muet':'agir'}">${p.tag}</span>`}
+              ${r ? confBadge(r.confiance) : ''}
+              ${r ? riskBadge(r.risque7j, false) : ''}
+            </div>
+            <div style="font-weight:700; margin-top:6px;">${p.nom}
+              <span class="mono faint" style="font-size:9px; font-weight:500;">· ${p.ville} (${p.dept}) · ${p.machines.join(', ')}</span></div>
+            <div class="reco-why">${r ? r.titre : p.motif}</div>
+            <div class="mono faint" style="font-size:9px; margin-top:3px;">score ${p.delta} en ${p.deltaWin} · ${p.nbAlertes} alerte(s) · ${p.nbErreurs} erreur(s)</div>
+          </td>
+          <td>${spark(p.spark, SPARK_COLORS[p.sparkColor])}</td>
+          <td class="mono dim" style="font-size:10.5px;">${p.depuis}<br><span class="faint" style="font-size:9px;">fiche →</span></td>
+        </tr>`;
+      const detail = r ? `
+        <tr class="kb-row reco-drow" data-drow="${i}"><td colspan="4">
+          <div class="reco-detail" style="border-top:none; margin-top:0; padding-top:0;">
+            <div class="rd-sect">
+              <div class="rd-h">Pourquoi cette reco — facteurs pondérés</div>
+              ${factorRows(r.facteurs, null)}
+            </div>
+            <div class="rd-sect">
+              <div class="rd-h">Script d'appel · ${p.tel}</div>
+              ${scriptBlock(r.script, r.sources)}
+            </div>
+            <div class="rd-sect" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
+              ${feedbackChip('reco-'+p.id)}
+              <span class="mono faint" style="font-size:9px;">recalculé ${r.calculeLe}</span>
+            </div>
+          </div>
+        </td></tr>` : '';
+      return head + detail;
+    }).join('') ||
+      `<tr><td colspan="4" style="text-align:center; color:var(--ink-faint); padding:28px;">Aucune recommandation pour ce filtre.</td></tr>`;
+
+    /* branchements post-render */
+    body.querySelectorAll('.reco-chev').forEach(btn => btn.addEventListener('click', ev => {
+      ev.stopPropagation();
+      const i = btn.dataset.toggle;
+      const drow = body.querySelector(`.reco-drow[data-drow="${i}"]`);
+      if (!drow) return;
+      btn.classList.toggle('open');
+      drow.classList.toggle('show');
+      if (drow.classList.contains('show')) animateFactors(drow);
+    }));
+    bindFeedback(body);
+  }
+  render();
+
+  /* filtres sémaphore */
+  document.querySelectorAll('.sem-card').forEach(c => c.addEventListener('click', () => {
+    const f = c.dataset.f;
+    if (f === 'ok'){ location.href = 'pharmacies.html'; return; }
+    if (semFilter === f){ semFilter='all'; c.classList.remove('active'); }
+    else { semFilter=f; document.querySelectorAll('.sem-card').forEach(x=>x.classList.remove('active')); c.classList.add('active'); }
+    render();
+  }));
+  /* filtres composant */
+  document.querySelectorAll('#compFilters .chip').forEach(ch => ch.addEventListener('click', () => {
+    document.querySelectorAll('#compFilters .chip').forEach(x=>x.classList.remove('active'));
+    ch.classList.add('active'); compFilter = ch.dataset.c; render();
+  }));
+  /* filtre par confiance */
+  document.querySelectorAll('#confFilters .chip').forEach(ch => ch.addEventListener('click', () => {
+    document.querySelectorAll('#confFilters .chip').forEach(x=>x.classList.remove('active'));
+    ch.classList.add('active'); confFilter = ch.dataset.k; render();
+  }));
+
+  /* nominal : grille de points */
+  const dg = document.getElementById('dotgrid');
+  for (let i=0;i<60;i++){ const d=document.createElement('span'); d.className='dot'; dg.appendChild(d); }
+
+  /* top erreurs — filtre fonctionnel */
+  const chart = document.getElementById('topErrChart');
+  renderHBars(chart, TOP_ERRORS.all);
+  document.getElementById('typeSel').addEventListener('change', e => renderHBars(chart, TOP_ERRORS[e.target.value]));
+
+  /* silence radio */
+  document.getElementById('muettesList').innerHTML = MUETTES.map(m => `
+    <div style="padding:11px 17px; border-bottom:1px solid var(--line); font-size:12px; ${m.pid?'cursor:pointer;':''}"
+         ${m.pid? `onclick="location.href='machine.html?m=${PHARMACIES.find(p=>p.id===m.pid).machinePrincipale}'"`:''}>
+      <div style="display:flex; justify-content:space-between; gap:10px;">
+        <b style="font-size:12px;">${m.nom}</b>
+        <span class="mono" style="color:var(--muet); font-weight:600; font-size:10.5px;">${m.t}</span>
+      </div>
+      <div style="color:var(--ink-faint); font-size:10.5px; margin-top:2px;">${m.mac} · ${m.note}</div>
+    </div>`).join('');
+
+  /* pièces fin de vie (top 3) */
+  document.getElementById('wearList').innerHTML = PIECES.slice(0,3).map(p => `
+    <div style="padding:11px 17px; border-bottom:1px solid var(--line); font-size:12px;">
+      <div style="display:flex; justify-content:space-between; gap:10px;">
+        <b>${p.piece}</b>
+        <span class="mono" style="font-size:10px; ${p.etaCls==='crit'?'color:var(--agir); font-weight:600;':p.etaCls==='warn'?'color:var(--watch);':''}">${p.eta}</span>
+      </div>
+      <div style="color:var(--ink-faint); font-size:10.5px; margin:2px 0 7px;">${p.machine} · ${p.pharma}</div>
+      <div class="wear-bar"><i class="${p.etaCls}" style="width:${p.usure}%"></i></div>
+    </div>`).join('');
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pièces — Mekapharm SAV (maquette)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="pieces">
+
+<template id="page-content">
+  <div class="breadcrumb">Mekapharm SAV <span class="sep">/</span> <a href="index.html">Tableau de bord</a> <span class="sep">/</span> Pièces</div>
+  <h1 class="page-title">Suivi d'usure des pièces</h1>
+  <p class="page-sub">Delta compteur depuis la pose (PIECE_MACHINE) — trié par échéance projetée, plus par % brut</p>
+
+  <div class="semaphore note-host" style="margin-top:18px;">
+    <button class="sem-card" data-f="crit"><div class="sem-num">1</div>
+      <div><div class="sem-lbl"><span class="pulse"></span>&lt; 4 semaines</div><div class="sem-sub">planifier maintenant</div></div></button>
+    <button class="sem-card" data-f="warn" style="color:var(--watch);"><div class="sem-num">1</div>
+      <div><div class="sem-lbl">4 – 8 semaines</div><div class="sem-sub">coupler à une intervention</div></div></button>
+    <button class="sem-card" data-f="ok" style="color:var(--ok);"><div class="sem-num">4</div>
+      <div><div class="sem-lbl">&gt; 8 semaines</div><div class="sem-sub">rien à faire</div></div></button>
+    <span class="note" style="top:-11px; left:0;">R1.6 — la donnée primaire devient l'échéance, pas le pourcentage</span>
+  </div>
+
+  <section class="panel note-host">
+    <div class="panel-head">
+      <span class="panel-title">Pièces actives suivies</span>
+      <div class="chips" style="margin-left:14px;" id="compFilter">
+        <button class="chip active" data-c="all">Tous composants</button>
+        <button class="chip" data-c="OMEGA">OMEGA</button>
+        <button class="chip" data-c="ASC">ASC</button>
+        <button class="chip" data-c="ALPHA">ALPHA</button>
+        <button class="chip" data-c="TAPIS">Tapis</button>
+      </div>
+      <span class="panel-sub">échéance = extrapolation linéaire du rythme d'usure 8 dernières semaines (AGREG_*)</span>
+    </div>
+    <table class="tbl">
+      <thead><tr>
+        <th>Échéance</th><th>Pièce</th><th>Machine · Pharmacie</th><th>Compteur suivi</th>
+        <th>Posée le</th><th style="text-align:right;">Pose → actuel</th><th style="width:130px;">Usure</th><th></th>
+      </tr></thead>
+      <tbody id="piecesBody"></tbody>
+    </table>
+    <span class="note" style="top:-11px; left:14px;">Conservé : logique delta valPose. Ajout : colonne échéance + tri + CTA planifier</span>
+  </section>
+
+  <p class="hint section-gap">💡 Suggestion automatique : la <b>ventouse gripper M0482</b> arrive à échéance dans ≈ 5 sem. et une intervention ASC2 est déjà à planifier sur cette machine — <b>coupler les deux</b> économise un déplacement.</p>
+</template>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const body = document.getElementById('piecesBody');
+  body.innerHTML = PIECES.map(p => `
+    <tr>
+      <td class="mono" style="font-weight:700; font-size:11.5px; color:${p.etaCls==='crit'?'var(--agir)':p.etaCls==='warn'?'var(--watch)':'var(--ink-dim)'};">${p.eta}</td>
+      <td><b>${p.piece}</b><div class="mono faint" style="font-size:9px; margin-top:2px;">${p.ref}</div></td>
+      <td class="dim" style="font-size:12px;"><a href="machine.html?m=${p.machine}" style="color:var(--ink); text-decoration:none; font-family:var(--mono); font-size:11px;">${p.machine}</a><div class="faint" style="font-size:10.5px;">${p.pharma}</div></td>
+      <td class="dim" style="font-size:11.5px;">${p.compteur}</td>
+      <td class="mono faint" style="font-size:10.5px;">${p.pose}</td>
+      <td class="mono num" style="text-align:right; font-size:11px;">${p.valPose} → <b>${p.valAct}</b></td>
+      <td><div class="wear-bar"><i class="${p.etaCls}" style="width:${p.usure}%"></i></div>
+        <div class="mono faint" style="font-size:9px; margin-top:3px;">${p.usure} % du seuil critique</div></td>
+      <td>${p.etaCls? '<button class="btn sm">Planifier</button>':''}</td>
+    </tr>`).join('');
+});
+</script>
+</body>
+</html>

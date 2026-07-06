@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pharmacies — Mekapharm SAV (maquette)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="pharmacies">
+
+<template id="page-content">
+  <div class="breadcrumb">Mekapharm SAV <span class="sep">/</span> <a href="index.html">Tableau de bord</a> <span class="sep">/</span> Pharmacies</div>
+
+  <!-- monitoring télémétrie (conservé de la page actuelle, compacté) -->
+  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px;" class="note-host">
+    <button class="chip" style="color:var(--agir); border-color:rgba(255,84,73,.3);">⚠ Code machine inconnu <b class="mono">2</b></button>
+    <button class="chip" style="color:var(--watch); border-color:rgba(255,178,36,.3);">⚠ Pharmacie inconnue (prospects) <b class="mono">5</b></button>
+    <button class="chip" style="color:var(--muet); border-color:rgba(142,157,187,.3);">⏱ Horloge désynchronisée <b class="mono">1</b></button>
+    <span class="note" style="top:-11px; left:0;">Panneaux monitoring conservés tels quels (hygiène pipeline)</span>
+  </div>
+
+  <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+    <div>
+      <h1 class="page-title">Pharmacies <span class="badge neutral" style="font-size:11px; vertical-align:4px;">226</span></h1>
+      <p class="page-sub">Parc machines — vue d'ensemble par pharmacie cliente</p>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <input class="inp" id="pharmSearch" type="search" placeholder="Nom ou code client…" style="width:230px;">
+      <div class="chips">
+        <button class="chip active" id="btnCard" title="Vue cartes">▦ Cartes</button>
+        <button class="chip" id="btnList" title="Vue liste">☰ Liste</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- cards de filtre par statut (conservées — passées à 3 états + muettes) -->
+  <nav class="semaphore note-host" style="margin-top:18px;">
+    <button class="sem-card active" data-f="all" style="color:var(--ink-dim);"><div class="sem-num">226</div>
+      <div><div class="sem-lbl">Toutes</div></div></button>
+    <button class="sem-card" data-f="agir"><div class="sem-num">3</div>
+      <div><div class="sem-lbl">Agir</div></div></button>
+    <button class="sem-card" data-f="surveiller"><div class="sem-num">7</div>
+      <div><div class="sem-lbl">Surveiller</div></div></button>
+    <button class="sem-card" data-f="muet"><div class="sem-num">4</div>
+      <div><div class="sem-lbl">Silence radio</div></div></button>
+    <button class="sem-card" data-f="ok"><div class="sem-num">212</div>
+      <div><div class="sem-lbl">Nominal</div></div></button>
+    <span class="note" style="top:-11px; left:0;">R3.2 — 5 statuts actuels (aucune/info/warning/critical) → 3 états + muettes</span>
+  </nav>
+
+  <!-- vue cartes -->
+  <div class="pharma-grid note-host" id="cardView">
+    <span class="note" style="top:-11px; left:0;">R1.1 grade · R2.3 motif · R5.1/R5.2 action + risque 7 j sur cards dégradées (nominales : rien — discipline couleur)</span>
+  </div>
+
+  <!-- vue liste -->
+  <div class="panel" id="listView" style="display:none;">
+    <table class="tbl">
+      <thead><tr>
+        <th style="width:56px;">Score</th><th>Code</th><th>Nom</th><th>Ville</th>
+        <th>Diagnostic</th><th style="width:100px;">Tendance</th><th style="width:110px;">Machines</th>
+      </tr></thead>
+      <tbody id="listBody"></tbody>
+    </table>
+  </div>
+
+  <p class="hint section-gap">Maquette : 10 pharmacies représentatives affichées — en réel, les nominales sont repliées derrière le filtre « Nominal » (pas de pagination de pharmacies saines).</p>
+</template>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  let f = 'all', q = '';
+  const cardView = document.getElementById('cardView');
+  const listBody = document.getElementById('listBody');
+
+  const chipCls = s => s==='err' ? 'err' : s==='warn' ? 'warn' : '';
+  const compChips = p => p.composants.map(c =>
+    `<span class="comp-chip ${chipCls(c.s)}"><span class="d"></span>${c.n}${c.s==='mute'?' · muet':''}</span>`).join('');
+
+  function visible(){
+    return PHARMACIES.filter(p => (f==='all' || p.etat===f))
+      .filter(p => !q || (`${p.nom} ${p.ville} ${p.id} ${p.machines.join(' ')}`).toLowerCase().includes(q));
+  }
+
+  function render(){
+    const rows = visible();
+    /* cartes */
+    cardView.querySelectorAll('.pharma-card').forEach(e=>e.remove());
+    rows.forEach((p,i) => {
+      const el = document.createElement('div');
+      el.className = 'pharma-card rise'; el.dataset.etat = p.etat;
+      el.style.animationDelay = (i*35)+'ms';
+      el.onclick = () => location.href = `machine.html?m=${p.machinePrincipale}`;
+      el.innerHTML = `
+        <div class="accent"></div>
+        <div class="body">
+          <div class="head">
+            <div class="grade-box ${p.etat}">${p.grade}</div>
+            <div style="min-width:0; flex:1;">
+              <h3>${p.nom}</h3>
+              <div class="loc">${p.id} · ${p.ville} (${p.dept})</div>
+            </div>
+            ${spark(p.spark, SPARK_COLORS[p.sparkColor], 70, 24)}
+          </div>
+          <div class="motif">${p.etat==='ok' ? '<span style="color:var(--ink-faint)">Aucune anomalie, aucune dérive.</span>' : p.motif}</div>
+          ${p.etat!=='ok' && p.reco ? `<div style="display:flex; align-items:center; gap:9px; flex-wrap:wrap; margin:2px 0 4px;">
+            ${actBadge(p.reco.action, true)} ${riskBadge(p.reco.risque7j, true)}</div>` : ''}
+          <div class="comp-chips">${compChips(p)}</div>
+        </div>
+        <div class="foot">
+          <span class="tel">☎ ${p.tel}</span>
+          <span class="since">${p.etat==='ok' ? 'RAS' : (p.etat==='muet' ? 'muette ' + p.depuis : p.depuis)}</span>
+        </div>`;
+      cardView.appendChild(el);
+    });
+    /* liste */
+    listBody.innerHTML = rows.map(p => `
+      <tr onclick="location.href='machine.html?m=${p.machinePrincipale}'" style="cursor:pointer;">
+        <td><div class="grade-box ${p.etat}" style="width:30px; height:30px; font-size:14px;">${p.grade}</div></td>
+        <td class="mono dim">${p.id}</td>
+        <td style="font-weight:700;">${p.nom}</td>
+        <td class="dim">${p.ville} (${p.dept})</td>
+        <td class="dim" style="font-size:11.5px; max-width:320px;">${p.etat==='ok' ? '—' : p.motif}</td>
+        <td>${spark(p.spark, SPARK_COLORS[p.sparkColor], 76, 22)}</td>
+        <td class="mono faint" style="font-size:10px;">${p.machines.join(', ')}</td>
+      </tr>`).join('');
+  }
+  render();
+
+  document.querySelectorAll('.sem-card').forEach(c => c.addEventListener('click', () => {
+    document.querySelectorAll('.sem-card').forEach(x=>x.classList.remove('active'));
+    c.classList.add('active'); f = c.dataset.f; render();
+  }));
+  document.getElementById('pharmSearch').addEventListener('input', e => { q = e.target.value.toLowerCase().trim(); render(); });
+
+  const btnCard = document.getElementById('btnCard'), btnList = document.getElementById('btnList');
+  const setView = m => {
+    document.getElementById('cardView').style.display = m==='card' ? '' : 'none';
+    document.getElementById('listView').style.display = m==='list' ? '' : 'none';
+    btnCard.classList.toggle('active', m==='card'); btnList.classList.toggle('active', m==='list');
+    localStorage.setItem('mock_pharm_view', m);
+  };
+  btnCard.onclick = () => setView('card'); btnList.onclick = () => setView('list');
+  setView(localStorage.getItem('mock_pharm_view') || 'card');
+});
+</script>
+</body>
+</html>

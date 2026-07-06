@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M0482 — Détail machine (maquette)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="machine">
+
+<template id="page-content">
+  <div class="breadcrumb">
+    <a href="index.html">Dashboard</a> <span class="sep">›</span>
+    <a href="pharmacies.html">Pharmacies</a> <span class="sep">›</span>
+    <span id="bcClient">—</span> <span class="sep">›</span>
+    <span style="color:var(--watch);">Machine <span id="bcMac">—</span></span>
+  </div>
+
+  <!-- ═══ HEADER MACHINE (structure actuelle : top + meta 5 colonnes) ═══ -->
+  <div class="mac-header note-host">
+    <div class="top">
+      <div style="display:flex; gap:16px; align-items:flex-start;">
+        <div class="grade-box agir" style="width:46px; height:46px; font-size:21px;" id="hGrade">D</div>
+        <div>
+          <div class="mono" style="font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-faint);" id="hClient">—</div>
+          <h1 class="page-title" style="display:flex; align-items:center; gap:11px; margin-top:4px;">
+            Machine
+            <select class="sel mono" id="macSel" style="font-weight:700; font-size:14px;"></select>
+            <span class="badge agir" id="hBadge">2 alertes actives</span>
+          </h1>
+          <p class="page-sub" id="hSub">Robot de stockage automatisé</p>
+        </div>
+      </div>
+      <div style="display:flex; gap:8px; align-items:flex-start;">
+        <a class="btn sm" href="pieces.html">⚙ Pièces à remplacer</a>
+        <button class="btn sm primary">+ Créer intervention</button>
+      </div>
+    </div>
+    <div class="meta">
+      <div><div class="k">Code machine</div><div class="v mono" style="color:var(--watch);" id="mMac">—</div></div>
+      <div><div class="k">Version logiciel</div>
+        <div class="v" style="font-size:12px;" id="mVer">—</div>
+        <button class="hint" id="verBtn" style="cursor:pointer; border:none; padding:0; font-size:9.5px; color:var(--ink-faint); text-decoration:underline dotted;">toutes les versions ▾</button>
+      </div>
+      <div><div class="k">Type OMEGA</div><div class="v" id="mType">—</div></div>
+      <div><div class="k">Dernière synchro</div><div class="v" id="mSync" style="color:var(--ok);">—</div></div>
+      <div><div class="k">Score santé</div><div class="v" id="mScore">—</div></div>
+      <div class="note-host"><div class="k">Risque 7 j</div>
+        <div class="v" id="mRisk" style="display:flex; align-items:center; gap:8px;">—</div>
+        <span class="note" style="top:-11px; right:6px;">R5.2 — score prédictif précalculé</span>
+      </div>
+    </div>
+    <div id="verMenu" style="display:none; border-top:1px solid var(--line); padding:10px 18px; background:var(--bg-raise);"></div>
+    <span class="note" style="top:-11px; left:14px;">Header conservé — ajout : score santé (R1.1) + grade + synchro colorée par fraîcheur (R1.2)</span>
+  </div>
+
+  <!-- ═══ BANDEAU DIAGNOSTIC EN UNE PHRASE ═══ -->
+  <div class="diag-banner agir note-host" id="diagBanner">
+    <span class="note" style="top:-11px; left:10px;">R2.3 — l'état en une phrase, avant tout scroll. Généré par règles (voir plan d'implémentation)</span>
+  </div>
+
+  <!-- ═══ BLOC RECOMMANDATION D'ACTION ═══ -->
+  <div class="reco-panel note-host" id="recoPanel" style="display:none;">
+    <span class="note" style="top:-11px; left:14px;">R5.1 reco déterministe + confiance · R5.3 feedback (table RECO_FEEDBACK) · facteurs cliquables → métrique</span>
+  </div>
+
+  <!-- ═══ ONGLETS COMPOSANTS (conservés — triés par gravité, pastilles réelles) ═══ -->
+  <div class="comp-tabs note-host" id="compTabs">
+    <span class="note" style="top:-11px; left:0;">R2.4 — onglets conservés MAIS triés par gravité + pastilles calculées (fini le "ok" codé en dur)</span>
+  </div>
+  <div id="tabPanels"></div>
+
+  <div class="grid-2 section-gap">
+    <!-- ═══ JOURNAL D'ERREURS (conservé — ajout cause/résolution dépliables) ═══ -->
+    <section class="panel note-host">
+      <div class="panel-head">
+        <span class="panel-title">Journal d'erreurs</span>
+        <span class="badge neutral" id="errCount">—</span>
+        <label class="hint" style="margin-left:auto; cursor:pointer; display:flex; align-items:center; gap:6px;">
+          <input type="checkbox" id="showSilenced" checked> silencées
+        </label>
+      </div>
+      <table class="tbl">
+        <thead><tr>
+          <th style="width:26px;"></th><th>Date</th><th>Code</th><th>Description</th>
+          <th>Op.</th><th style="text-align:right;">Occ. 7 j</th><th>Statut</th><th>Silence</th>
+        </tr></thead>
+        <tbody id="errBody"></tbody>
+      </table>
+      <span class="note" style="top:-11px; left:14px;">R2.2 — chevron = cause + résolution + pièces suspectes (CODE_ERREUR + ErreurImpactResolver, R2.5) + historique silences (R2.10)</span>
+    </section>
+
+    <!-- ═══ TIMELINE UNIFIÉE ═══ -->
+    <aside class="stack">
+      <div class="panel note-host">
+        <div class="panel-head"><span class="panel-title">Qu'est-ce qui a changé ?</span><span class="panel-sub">timeline unifiée</span></div>
+        <div style="padding:16px 20px;"><div class="tl" id="tlList"></div></div>
+        <span class="note" style="top:-11px; left:10px;">R2.6 — UNION : LOG_ERREUR + LOG_ALERTE + SOFTWARE_VERSION + SURVEILLANCE + INTERVENTION</span>
+      </div>
+      <div class="panel">
+        <div class="panel-head"><span class="panel-title">Alertes ouvertes</span><span class="panel-sub">seuils REGLE_ALERTE</span></div>
+        <div style="padding:6px 20px 14px;">
+          <div style="display:flex; gap:10px; align-items:center; padding:10px 0; border-bottom:1px solid var(--line);">
+            <span class="badge agir">critical</span>
+            <div style="font-size:12px;"><b>Défauts position minimale — ASC2</b>
+              <div class="mono faint" style="font-size:9.5px; margin-top:2px;">mesuré 12 · seuil 10 · depuis 2 h</div></div>
+          </div>
+          <div style="display:flex; gap:10px; align-items:center; padding:10px 0;">
+            <span class="badge watch">warning</span>
+            <div style="font-size:12px;"><b>Erreurs de déplacement — OMEGA</b>
+              <div class="mono faint" style="font-size:9.5px; margin-top:2px;">mesuré 47 · baseline 28 (+68 %) · corrélé MAJ 12/06</div></div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+</template>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const M = MACHINE_M0482; /* la maquette détaille M0482 ; les autres liens y renvoient */
+  const P = M.client;
+
+  document.title = `${M.macCode} — Détail machine (maquette)`;
+  document.getElementById('bcClient').textContent = P.nom;
+  document.getElementById('bcMac').textContent = M.macCode;
+  document.getElementById('hClient').textContent = `${P.nom} · ${P.id} · ${P.ville} (${P.dept}) · ☎ ${P.tel}`;
+  document.getElementById('hSub').textContent = `Robot de stockage automatisé · mise en service ${M.install}`;
+  document.getElementById('mMac').textContent = M.macCode;
+  document.getElementById('mVer').textContent = M.versionPrincipale;
+  document.getElementById('mType').textContent = M.typeOmega;
+  document.getElementById('mSync').innerHTML = `● ${M.syncho}`;
+  document.getElementById('mScore').innerHTML = `${P.score}/100 <span class="mono" style="font-size:10px; color:var(--agir);">${P.delta} en ${P.deltaWin}</span>`;
+
+  /* tuile risque 7 j — mini-jauge SVG (arc) + % */
+  const R = P.reco;
+  const riskPct = R ? R.risque7j : null;
+  const mRisk = document.getElementById('mRisk');
+  if (mRisk && riskPct != null){
+    const lv = riskLevel(riskPct);
+    const col = lv==='hi' ? 'var(--agir)' : lv==='mid' ? 'var(--watch)' : 'var(--ink-dim)';
+    const C = 2*Math.PI*13, off = C*(1 - riskPct/100);
+    mRisk.innerHTML = `
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true">
+        <circle cx="17" cy="17" r="13" fill="none" stroke="var(--panel-2)" stroke-width="3.5"/>
+        <circle cx="17" cy="17" r="13" fill="none" stroke="${col}" stroke-width="3.5" stroke-linecap="round"
+          stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${off.toFixed(1)}" transform="rotate(-90 17 17)"/>
+      </svg>
+      <span style="font-size:17px; font-weight:900; color:${col}; font-variant-numeric:tabular-nums;">${riskPct} %</span>`;
+  } else if (mRisk){ mRisk.textContent = '—'; }
+
+  /* bloc recommandation d'action */
+  const recoPanel = document.getElementById('recoPanel');
+  if (recoPanel && R){
+    if (R.action==='surveiller') recoPanel.classList.add('surveiller');
+    recoPanel.style.display = '';
+    recoPanel.insertAdjacentHTML('beforeend', `
+      <div class="rp-top">
+        <span class="rp-lead">Recommandation — recalculée ${R.calculeLe}</span>
+        ${actBadge(R.action, false)} ${confBadge(R.confiance)} ${riskBadge(R.risque7j, true)}
+      </div>
+      <div class="rp-title">${R.titre}</div>
+      <div class="rp-resume">${R.resume||''}</div>
+      <div class="rd-sect" style="margin-top:14px;">
+        <div class="rd-h">Pourquoi — facteurs pondérés <span class="mono faint" style="text-transform:none; letter-spacing:0;">(cliquez un facteur relié à une métrique)</span></div>
+        ${factorRows(R.facteurs, true)}
+      </div>
+      <div class="rp-actions">
+        <button class="btn primary sm" id="recoDone">✓ Fait</button>
+        <button class="btn sm" id="recoWatch">👁 Surveiller 7 j</button>
+        <span style="margin-left:auto;">${feedbackChip('reco-'+P.id)}</span>
+      </div>`);
+    animateFactors(recoPanel);
+    bindFeedback(recoPanel);
+
+    /* facteurs cliquables → bascule sur l'onglet composant + scroll */
+    recoPanel.querySelectorAll('.factor .fl.anchor').forEach(fl => fl.addEventListener('click', () => {
+      const anchor = fl.dataset.anchor;                 /* ex : panel-asc2 */
+      const target = document.getElementById(anchor);
+      if (!target) return;
+      const tabId = anchor.replace('panel-','');
+      const tabBtn = document.querySelector(`.comp-tab[data-tab="${tabId}"]`);
+      if (tabBtn) tabBtn.click();
+      target.scrollIntoView({ behavior:'smooth', block:'center' });
+      target.querySelector('.metric')?.animate(
+        [{ boxShadow:'0 0 0 2px var(--watch)' }, { boxShadow:'0 0 0 0 transparent' }],
+        { duration:1200, easing:'ease-out' });
+    }));
+
+    /* boutons Fait / Surveiller — feedback visuel léger, non bloquant */
+    const done = document.getElementById('recoDone');
+    if (done) done.addEventListener('click', () => {
+      done.textContent = '✓ Marqué fait'; done.classList.remove('primary');
+      done.style.borderColor = 'var(--ok)'; done.style.color = 'var(--ok)';
+    });
+    const watch = document.getElementById('recoWatch');
+    if (watch) watch.addEventListener('click', () => {
+      watch.textContent = '👁 Sous surveillance 7 j';
+      watch.style.borderColor = 'var(--watch)'; watch.style.color = 'var(--watch)';
+    });
+  }
+
+  /* dropdown machines sœurs */
+  const sel = document.getElementById('macSel');
+  sel.innerHTML = P.machines.map(m => `<option ${m===M.macCode?'selected':''}>${m}</option>`).join('');
+
+  /* menu versions */
+  document.getElementById('verBtn').onclick = () => {
+    const menu = document.getElementById('verMenu');
+    menu.style.display = menu.style.display==='none' ? 'block' : 'none';
+    menu.innerHTML = '<table class="tbl" style="font-size:11px;">' + M.versions.map(v =>
+      `<tr><td class="mono dim" style="padding:5px 8px;">${v.comp}</td><td class="mono faint" style="padding:5px 8px;">${v.col}</td><td style="padding:5px 8px; font-weight:600;">${v.v}</td><td class="mono faint" style="padding:5px 8px;">depuis ${v.d}</td></tr>`).join('') + '</table>';
+  };
+
+  /* bandeau diagnostic */
+  document.getElementById('diagBanner').insertAdjacentHTML('beforeend',
+    `<span class="lead">${M.banner.lead}</span>${M.banner.txt}`);
+
+  /* onglets composants triés par gravité */
+  const tabs = document.getElementById('compTabs');
+  const panels = document.getElementById('tabPanels');
+  M.tabs.forEach((t,i) => {
+    tabs.insertAdjacentHTML('beforeend',
+      `<button class="comp-tab ${i===0?'active':''}" data-tab="${t.id}"><span class="dot ${t.dot}"></span>${t.label}</button>`);
+    const tc = M.tabsContent[t.id];
+    panels.insertAdjacentHTML('beforeend',
+      `<div class="tab-panel ${i===0?'active':''}" id="panel-${t.id}">
+        <div class="metrics note-host">${tc.metrics.map(metricCard).join('')}
+          ${i===0? '<span class="note" style="top:-11px; left:0;">R2.8 comparaison parc/baseline · R3.4 sparklines 8 sem. (AGREG_*)</span>':''}
+        </div>
+      </div>`);
+  });
+  bindTabs('.comp-tab', 'panel-');
+
+  /* journal d'erreurs avec cause/résolution dépliables */
+  const errBody = document.getElementById('errBody');
+  document.getElementById('errCount').textContent = M.erreurs.length + ' entrées';
+  function renderErrs(){
+    const showSil = document.getElementById('showSilenced').checked;
+    errBody.innerHTML = M.erreurs.filter(e => showSil || !e.silenced).map((e,i) => `
+      <tr class="grp-head" data-err="${i}" style="${e.silenced?'opacity:.5;':''}">
+        <td><span class="chev">▶</span></td>
+        <td class="mono faint" style="font-size:10px;">${e.date}</td>
+        <td class="mono" style="font-weight:700; color:${e.occ>=10?'var(--agir)':e.occ>=3?'var(--watch)':'var(--ink-dim)'};">${e.code}</td>
+        <td class="dim" style="font-size:12px;">${e.nom}</td>
+        <td><span class="badge neutral">${e.op}</span></td>
+        <td class="num" style="text-align:right; font-weight:800; color:${e.occ>=10?'var(--agir)':e.occ>=3?'var(--watch)':'var(--ink-dim)'};">${e.occ}</td>
+        <td><span class="badge ${e.statut==='resolu'?'ok':e.statut==='en_cours'?'watch':'neutral'}">${e.statut}</span></td>
+        <td>${e.silenced? '<span class="badge muet">🔕 silencée</span>' : '<button class="btn sm ghost">silencer 7 j</button>'}</td>
+      </tr>
+      <tr class="kb-row" data-kb="${i}"><td colspan="8">
+        <div class="kb"><span class="k">Cause connue</span><p>${e.cause}</p></div>
+        <div class="kb resol"><span class="k">Résolution recommandée</span><ol>${e.resolution.map(r=>`<li>${r}</li>`).join('')}</ol></div>
+        ${e.pieces.length? `<div class="kb piece"><span class="k">Pièces probablement en cause</span>${e.pieces.map(pi=>`<div class="piece-row"><span>${pi.n} <span style="color:var(--ink-faint)">— ${pi.d}</span></span><span class="eta">${pi.eta}</span></div>`).join('')}</div>`:''}
+        ${e.histo? `<div class="kb histo"><span class="k">Historique surveillance</span><p>${e.histo}</p></div>`:''}
+      </td></tr>`).join('');
+    errBody.querySelectorAll('.grp-head').forEach(row => row.addEventListener('click', ev => {
+      if (ev.target.closest('button')) return;
+      row.classList.toggle('open');
+      const kb = errBody.querySelector(`.kb-row[data-kb="${row.dataset.err}"]`);
+      if (kb) kb.classList.toggle('show');
+    }));
+  }
+  renderErrs();
+  document.getElementById('showSilenced').addEventListener('change', renderErrs);
+
+  /* timeline */
+  document.getElementById('tlList').innerHTML = M.timeline.map(t =>
+    `<div class="tl-item ${t.cls}"><div class="d">${t.d}</div><div class="e">${t.e}</div></div>`).join('');
+});
+</script>
+</body>
+</html>

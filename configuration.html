@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Configuration — Mekapharm SAV (maquette)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-page="configuration">
+
+<template id="page-content">
+  <div class="breadcrumb">Mekapharm SAV <span class="sep">/</span> <a href="index.html">Tableau de bord</a> <span class="sep">/</span> Configuration</div>
+  <h1 class="page-title">Configuration</h1>
+  <p class="page-sub">Codes erreurs (base de connaissance) · règles d'alerte · pièces · paramètres · utilisateurs</p>
+
+  <div class="cfg-tabs">
+    <button class="comp-tab active" data-tab="codes"><span class="dot warn"></span>Codes erreurs</button>
+    <button class="comp-tab" data-tab="regles"><span class="dot ok"></span>Règles d'alerte</button>
+    <button class="comp-tab" data-tab="pieces"><span class="dot ok"></span>Référentiel pièces</button>
+    <button class="comp-tab" data-tab="params"><span class="dot ok"></span>Paramètres</button>
+    <button class="comp-tab" data-tab="utilisateurs"><span class="dot ok"></span>Utilisateurs &amp; zones</button>
+  </div>
+
+  <!-- ═══ CODES ERREURS = LA BASE DE CONNAISSANCE ═══ -->
+  <div class="tab-panel active" id="cfg-codes">
+    <div class="diag-banner surveiller note-host">
+      <span class="lead">Base de connaissance diagnostic</span>
+      Chaque <b>cause</b> et <b>résolution</b> saisie ici s'affiche directement dans le journal d'erreurs de la fiche machine (dépliable).
+      <b>2 codes fréquents sur 5 n'ont pas encore de fiche</b> — les compléter est la tâche éditoriale n°1.
+      <span class="note" style="top:-11px; right:10px;">R2.2 — cet écran existe déjà ; ce qui change : son contenu devient visible côté hotliner</span>
+    </div>
+    <div class="grid-2">
+      <section class="panel">
+        <div class="panel-head">
+          <span class="panel-title">Référentiel CODE_ERREUR</span>
+          <span class="panel-sub">complétude fiches : 3 / 5 codes fréquents</span>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>Code</th><th>Nom</th><th>Composant</th><th>Sous-comp.</th><th>Fiche</th><th></th></tr></thead>
+          <tbody id="codesBody"></tbody>
+        </table>
+      </section>
+      <section class="panel">
+        <div class="panel-head"><span class="panel-title">Édition — fiche diagnostic</span><span class="panel-sub" id="editLbl">-32090</span></div>
+        <div style="padding:16px 20px; display:grid; gap:12px;">
+          <div><label class="hint" style="display:block; margin-bottom:5px;">Cause connue</label>
+            <textarea class="inp" rows="3" placeholder="Ex : goulotte saturée après réassort massif ; capteur de niveau…"></textarea></div>
+          <div><label class="hint" style="display:block; margin-bottom:5px;">Étapes de résolution (une par ligne — affichées numérotées)</label>
+            <textarea class="inp" rows="4" placeholder="Vérifier le taux de remplissage goulotte&#10;Lancer une réorganisation&#10;Si récurrent : revoir le paramétrage MbA"></textarea></div>
+          <div><label class="hint" style="display:block; margin-bottom:5px;">Pièces liées (alimente « pièces probablement en cause »)</label>
+            <input class="inp" style="width:100%;" placeholder="Rechercher une pièce du référentiel…"></div>
+          <div style="display:flex; gap:8px;"><button class="btn primary sm">Enregistrer</button><button class="btn sm ghost">Annuler</button></div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- ═══ RÈGLES D'ALERTE ═══ -->
+  <div class="tab-panel" id="cfg-regles">
+    <section class="panel note-host">
+      <div class="panel-head"><span class="panel-title">Règles de seuil (REGLE_ALERTE)</span>
+        <span class="panel-sub">adaptatif = seuil recalculé sur la baseline 8 sem. de chaque machine</span></div>
+      <table class="tbl">
+        <thead><tr><th>Alias</th><th>Libellé</th><th>Composant</th>
+          <th style="text-align:right;">Seuil warning</th><th style="text-align:right;">Seuil critique</th>
+          <th>Unité</th><th style="text-align:right;">Importance</th><th>Mode</th></tr></thead>
+        <tbody id="reglesBody"></tbody>
+      </table>
+      <span class="note" style="top:-11px; left:14px;">R2e — nouveauté : bascule seuil fixe / adaptatif (baseline par machine) par règle</span>
+    </section>
+  </div>
+
+  <!-- ═══ AUTRES ONGLETS (structure conservée, contenu inchangé) ═══ -->
+  <div class="tab-panel" id="cfg-pieces">
+    <div class="panel"><div style="padding:26px 24px; color:var(--ink-faint); font-size:12.5px;">
+      Référentiel PIECE (seuils alerte/critique, unités, composant/sous-composant) — <b>écran actuel conservé tel quel</b>.
+    </div></div>
+  </div>
+  <div class="tab-panel" id="cfg-params">
+    <div class="panel"><div style="padding:26px 24px; color:var(--ink-faint); font-size:12.5px;">
+      Paramètres applicatifs (APP_CONFIG : rétention INFOS_*, fenêtres de purge…) — <b>écran actuel conservé</b>.<br><br>
+      Ajouts refonte : <span class="badge watch">seuil silence radio (h)</span> <span class="badge watch">pondérations score santé</span> <span class="badge watch">fenêtre baseline (sem.)</span>
+    </div></div>
+  </div>
+  <div class="tab-panel" id="cfg-utilisateurs">
+    <div class="panel"><div style="padding:26px 24px; color:var(--ink-faint); font-size:12.5px;">
+      Gestion utilisateurs + zones (départements/pays) — <b>écran actuel conservé tel quel</b>. La zone alimente déjà le filtre du dashboard.
+    </div></div>
+  </div>
+</template>
+
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  bindTabs('.cfg-tabs .comp-tab', 'cfg-');
+
+  document.getElementById('codesBody').innerHTML = CODES_ERREURS.map(c => `
+    <tr>
+      <td class="mono" style="font-weight:700;">${c.code}</td>
+      <td style="font-size:12px;">${c.nom}</td>
+      <td class="mono dim" style="font-size:10px;">${c.composant}</td>
+      <td class="mono faint" style="font-size:10px;">${c.sousComposant||'—'}</td>
+      <td>${c.complet? '<span class="badge ok">complète</span>' : '<span class="badge agir">à rédiger</span>'}</td>
+      <td><button class="btn sm ghost">éditer</button></td>
+    </tr>`).join('');
+
+  document.getElementById('reglesBody').innerHTML = REGLES.map(r => `
+    <tr>
+      <td class="mono faint" style="font-size:10px;">${r.alias}</td>
+      <td style="font-size:12px; font-weight:600;">${r.nom}</td>
+      <td class="mono dim" style="font-size:10px;">${r.composant}</td>
+      <td class="mono num" style="text-align:right; color:var(--watch);">${r.warn}</td>
+      <td class="mono num" style="text-align:right; color:var(--agir);">${r.crit}</td>
+      <td class="mono faint" style="font-size:10px;">${r.unite}</td>
+      <td class="mono num" style="text-align:right;">${r.importance}</td>
+      <td>${r.adaptatif? '<span class="badge watch">adaptatif</span>' : '<span class="badge neutral">fixe</span>'}</td>
+    </tr>`).join('');
+});
+</script>
+</body>
+</html>
