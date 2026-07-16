@@ -1,247 +1,254 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Accueil — Mekapharm SAV (maquette)</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css">
-</head>
-<body data-page="dashboard">
-
-<template id="page-content">
-  <div class="breadcrumb">Mekapharm SAV <span class="sep">/</span> Tableau de bord</div>
-  <h1 class="page-title">Vue d'ensemble du parc</h1>
-  <p class="page-sub" id="todayLbl">Tableau de bord SAV</p>
-
-  <!-- ═══ SÉMAPHORE (remplace les 4 KPI actuels) ═══ -->
-  <nav class="semaphore note-host" aria-label="État du parc">
-    <button class="sem-card" data-f="agir"><div class="sem-num">3</div>
-      <div><div class="sem-lbl"><span class="pulse"></span>Agir maintenant</div><div class="sem-sub">dont 1 bascule &lt; 2 h</div></div></button>
-    <button class="sem-card" data-f="surveiller"><div class="sem-num">7</div>
-      <div><div class="sem-lbl">À surveiller</div><div class="sem-sub">dérive, seuil non franchi</div></div></button>
-    <button class="sem-card" data-f="muet"><div class="sem-num">4</div>
-      <div><div class="sem-lbl">Silence radio</div><div class="sem-sub">aucune télémétrie &gt; 24 h</div></div></button>
-    <button class="sem-card" data-f="ok"><div class="sem-num">212</div>
-      <div><div class="sem-lbl">Nominal</div><div class="sem-sub">96 % actives 48 h</div></div></button>
-    <span class="note" style="top:-11px; left:0;">R3.2 — 3 états + silence radio (R1.2) · remplace les 4 KPI "meubles/plateaux/alertes"</span>
-  </nav>
-
-  <!-- ═══ BANNIÈRE RÉGRESSION MAJ ═══ -->
-  <div class="maj-banner note-host">
-    <div class="h">⚠ Régression suspecte post-MAJ</div>
-    <p><b>OMEGA v3.10.15</b> — erreurs de déplacement médianes <b>+58 %</b> sur les <b>9 machines</b> migrées depuis le 12 juin. 2 pharmacies déjà dans la file ci-dessous.</p>
-    <span class="note" style="top:-11px; right:10px;">R1.7 — SOFTWARE_VERSION × ERR_OCCURRENCE_JOUR</span>
-  </div>
-
-  <div class="grid-2">
-    <!-- ═══ TABLEAU ALERTES/ERREURS — accordéon par pharmacie (structure conservée) ═══ -->
-    <section class="panel note-host">
-      <div class="panel-head">
-        <span class="panel-title">Recommandations d'action</span>
-        <div class="conf-filter note-host" id="confFilters" style="margin-left:14px;">
-          <span class="clbl">confiance</span>
-          <button class="chip active" data-k="all">Toutes</button>
-          <button class="chip" data-k="sur">sûr</button>
-          <button class="chip" data-k="probable">probable</button>
-          <button class="chip" data-k="hypothese">hypothèse</button>
-          <span class="note" style="top:-11px; left:0;">R5.5 — le hotliner filtre par niveau de confiance</span>
-        </div>
-        <span class="panel-sub">tri : dégradation récente — chevron = détail · ligne = fiche</span>
-      </div>
-      <div class="chips" id="compFilters" style="padding:8px 20px 4px;">
-        <button class="chip active" data-c="all">Tous composants</button>
-        <button class="chip" data-c="OMEGA">OMEGA</button>
-        <button class="chip" data-c="ASC">ASC</button>
-        <button class="chip" data-c="ALPHA">ALPHA</button>
-        <button class="chip" data-c="VBAPOCOM">VBAPOCOM</button>
-      </div>
-      <table class="tbl" id="alertTable">
-        <thead><tr>
-          <th style="width:52px;"></th><th>Pharmacie · recommandation</th>
-          <th style="width:96px;">Tendance</th><th style="width:70px;">Depuis</th>
-        </tr></thead>
-        <tbody id="alertBody"></tbody>
-      </table>
-      <div class="ok-fold note-host">
-        <div class="dotgrid" id="dotgrid"></div>
-        <div><b>212 pharmacies nominales</b> — rien à lire ici.
-          <a href="pharmacies.html" style="color:var(--ink-dim);">Voir le parc complet →</a></div>
-        <span class="note" style="top:-10px; left:14px;">R3.7 — le nominal se compte, ne se pagine pas</span>
-      </div>
-      <span class="note" style="top:-11px; left:14px;">R5.1 moteur de reco (règles déterministes + confiance, batch nocturne) · R1.3 file priorisée · clic chevron = facteurs + script + feedback</span>
-    </section>
-
-    <!-- ═══ RAIL DROIT ═══ -->
-    <aside class="stack">
-      <!-- encart moteur de recommandation -->
-      <div class="panel engine-card note-host">
-        <div class="eh">Moteur de recommandation</div>
-        <div class="et"><b>14 recommandations</b> ce matin · <b>87 %</b> jugées utiles (30 j)</div>
-        <div class="em"><span class="live"></span>recalcul nocturne — dernier passage 03:12</div>
-        <span class="note" style="top:-11px; right:10px;">R5.2 · R7 — score & recos précalculés cette nuit (batch parc > 1000)</span>
-      </div>
-
-      <!-- top erreurs — filtre FONCTIONNEL -->
-      <div class="panel note-host">
-        <div class="panel-head">
-          <span class="panel-title">Top erreurs — 7 jours</span>
-          <select class="sel" id="typeSel" style="margin-left:auto;">
-            <option value="all">Tous types</option>
-            <option value="omega">Omega</option>
-            <option value="ascenseurs">Ascenseurs</option>
-            <option value="alpha">Alpha</option>
-            <option value="vbapocom">VBapocom</option>
-          </select>
-        </div>
-        <div style="padding:14px 18px;" id="topErrChart"></div>
-        <span class="note" style="top:-11px; left:10px;">R4e — le filtre agit vraiment (aujourd'hui : select mort)</span>
-      </div>
-
-      <!-- silence radio -->
-      <div class="panel note-host">
-        <div class="panel-head"><span class="panel-title">Silence radio</span><span class="panel-sub">4 machines</span></div>
-        <div id="muettesList"></div>
-        <span class="note" style="top:-11px; left:10px;">R1.2 — nominatif, plus un simple % global 48 h</span>
-      </div>
-
-      <!-- pièces fin de vie -->
-      <div class="panel note-host">
-        <div class="panel-head"><span class="panel-title">Pièces — fin de vie projetée</span>
-          <a class="panel-sub" href="pieces.html" style="text-decoration:none;">tout voir →</a></div>
-        <div id="wearList"></div>
-        <span class="note" style="top:-11px; left:10px;">R1.6 — extrapolation du rythme d'usure hebdo</span>
-      </div>
-    </aside>
-  </div>
-</template>
-
-<script src="assets/data.js"></script>
-<script src="assets/app.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('todayLbl').textContent =
-    new Date().toLocaleDateString('fr-FR',{day:'2-digit', month:'long', year:'numeric'}) + ' — Tableau de bord SAV';
-
-  /* ── file de recommandations : une pharmacie dégradée = une reco ── */
-  let semFilter = 'all', compFilter = 'all', confFilter = 'all';
-  const body = document.getElementById('alertBody');
-
-  function render(){
-    const rows = PHARMACIES.filter(p => p.etat !== 'ok')
-      .filter(p => semFilter==='all' || p.etat===semFilter)
-      .filter(p => confFilter==='all' || (p.reco && p.reco.confiance===confFilter))
-      .filter(p => compFilter==='all' ||
-        p.composants.some(c => c.n.toUpperCase().startsWith(compFilter) && (c.s==='warn'||c.s==='err')) ||
-        (compFilter==='VBAPOCOM' && p.tag==='Plateaux') || (compFilter==='VBAPOCOM' && p.tag==='VBapocom'));
-    body.innerHTML = rows.map((p,i) => {
-      const r = p.reco;
-      const navAttr = `onclick="if(!event.target.closest('.reco-chev')) location.href='machine.html?m=${p.machinePrincipale}'"`;
-      const head = `
-        <tr class="grp-head rise" style="animation-delay:${i*40}ms; cursor:pointer;" data-pid="${p.id}" ${navAttr}>
-          <td>
-            ${r ? `<button class="reco-chev" data-toggle="${i}" aria-label="Détail recommandation">▶</button>` : `<div class="grade-box ${p.etat}">${p.grade}</div>`}
-          </td>
-          <td>
-            <div class="reco-line">
-              ${r ? actBadge(r.action, true) : `<span class="badge ${p.etat==='muet'?'muet':'agir'}">${p.tag}</span>`}
-              ${r ? confBadge(r.confiance) : ''}
-              ${r ? riskBadge(r.risque7j, false) : ''}
-            </div>
-            <div style="font-weight:700; margin-top:6px;">${p.nom}
-              <span class="mono faint" style="font-size:9px; font-weight:500;">· ${p.ville} (${p.dept}) · ${p.machines.join(', ')}</span></div>
-            <div class="reco-why">${r ? r.titre : p.motif}</div>
-            <div class="mono faint" style="font-size:9px; margin-top:3px;">score ${p.delta} en ${p.deltaWin} · ${p.nbAlertes} alerte(s) · ${p.nbErreurs} erreur(s)</div>
-          </td>
-          <td>${spark(p.spark, SPARK_COLORS[p.sparkColor])}</td>
-          <td class="mono dim" style="font-size:10.5px;">${p.depuis}<br><span class="faint" style="font-size:9px;">fiche →</span></td>
-        </tr>`;
-      const detail = r ? `
-        <tr class="kb-row reco-drow" data-drow="${i}"><td colspan="4">
-          <div class="reco-detail" style="border-top:none; margin-top:0; padding-top:0;">
-            <div class="rd-sect">
-              <div class="rd-h">Pourquoi cette reco — facteurs pondérés</div>
-              ${factorRows(r.facteurs, null)}
-            </div>
-            <div class="rd-sect">
-              <div class="rd-h">Script d'appel · ${p.tel}</div>
-              ${scriptBlock(r.script, r.sources)}
-            </div>
-            <div class="rd-sect" style="display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;">
-              ${feedbackChip('reco-'+p.id)}
-              <span class="mono faint" style="font-size:9px;">recalculé ${r.calculeLe}</span>
-            </div>
-          </div>
-        </td></tr>` : '';
-      return head + detail;
-    }).join('') ||
-      `<tr><td colspan="4" style="text-align:center; color:var(--ink-faint); padding:28px;">Aucune recommandation pour ce filtre.</td></tr>`;
-
-    /* branchements post-render */
-    body.querySelectorAll('.reco-chev').forEach(btn => btn.addEventListener('click', ev => {
-      ev.stopPropagation();
-      const i = btn.dataset.toggle;
-      const drow = body.querySelector(`.reco-drow[data-drow="${i}"]`);
-      if (!drow) return;
-      btn.classList.toggle('open');
-      drow.classList.toggle('show');
-      if (drow.classList.contains('show')) animateFactors(drow);
-    }));
-    bindFeedback(body);
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Suivi hotline — semaine du 2026-07-15</title>
+<style>
+  :root {
+    --ground: #f5f7f5; --surface: #ffffff; --ink: #1d2723; --ink-soft: #5a6a62;
+    --line: #dce3df; --accent: #1e7a5a; --accent-soft: #e2f0e9;
+    --hot: #b33a2c; --hot-soft: #f8e6e3; --mid: #a06212; --mid-soft: #f6ecda;
+    --done: #eaf5ef;
   }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--ground); color: var(--ink);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 1240px; margin: 0 auto; padding: 28px 20px 80px; }
+  h1 { font-size: 1.5rem; margin: 0; }
+  .sub { color: var(--ink-soft); margin-top: 4px; font-size: 0.95rem; max-width: 90ch; }
+  .mono { font-family: ui-monospace, Consolas, monospace; font-variant-numeric: tabular-nums; }
+
+  .bar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 20px 0 12px; }
+  .stat { background: var(--surface); border: 1px solid var(--line); border-radius: 6px;
+          padding: 10px 16px; font-size: 0.9rem; }
+  .stat b { font-size: 1.25rem; color: var(--accent); }
+  .stat.called b { color: var(--hot); }
+  .spacer { flex: 1; }
+  button {
+    font: inherit; border: 1px solid var(--line); border-radius: 6px;
+    background: var(--surface); color: var(--ink); padding: 9px 16px; cursor: pointer;
+  }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  #mode { font-size: 0.78rem; color: var(--ink-soft); }
+
+  .filters { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .filters button { font-size: 0.85rem; padding: 7px 14px; border-radius: 999px; }
+  .filters button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .tablewrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+  table { border-collapse: collapse; width: 100%; }
+  th { text-align: left; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+       color: var(--ink-soft); padding: 12px 14px; border-bottom: 2px solid var(--line);
+       position: sticky; top: 0; background: var(--surface); z-index: 1; }
+  td { padding: 11px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  tr.called td { background: var(--done); }
+  tr.called .nom { text-decoration: line-through; opacity: 0.7; }
+
+  .risk { display: flex; align-items: center; gap: 10px; min-width: 140px; }
+  .risk .track { flex: 1; height: 8px; border-radius: 4px; background: var(--line); overflow: hidden; }
+  .risk .fill { height: 100%; border-radius: 4px; }
+  .r-high .fill { background: var(--hot); }
+  .r-mid .fill { background: var(--mid); }
+  .r-low .fill { background: var(--accent); }
+  .risk .pct { width: 48px; text-align: right; font-weight: 700; }
+  .r-high .pct { color: var(--hot); }
+  .r-mid .pct { color: var(--mid); }
+  .r-low .pct { color: var(--accent); }
+
+  .cat { display: inline-block; font-size: 0.78rem; font-weight: 600; border-radius: 999px;
+         padding: 3px 11px; background: var(--accent-soft); color: var(--accent);
+         white-space: nowrap; cursor: help; }
+  .diag { font-size: 0.8rem; color: var(--ink-soft); margin-top: 5px; max-width: 40ch; }
+  .flag { font-size: 0.72rem; color: var(--mid); display: block; margin-top: 2px; }
+
+  .badge { display: inline-block; font-size: 0.75rem; font-weight: 600; border-radius: 5px;
+           padding: 3px 9px; white-space: nowrap; }
+  .badge.encours  { background: var(--hot-soft); color: var(--hot); }
+  .badge.rappel   { background: var(--mid-soft); color: var(--mid); }
+  .badge.proactif { background: var(--accent-soft); color: var(--accent); }
+  .badge-sub { display: block; font-size: 0.72rem; color: var(--ink-soft); margin-top: 3px; max-width: 26ch; }
+
+  .check label { display: flex; align-items: center; gap: 8px; cursor: pointer; white-space: nowrap; }
+  .check input { width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer; }
+  .when { font-size: 0.75rem; color: var(--ink-soft); }
+
+  footer { margin-top: 24px; font-size: 0.78rem; color: var(--ink-soft); max-width: 100ch; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Pharmacies à risque — semaine du <span class="mono">2026-07-15</span></h1>
+  <p class="sub">Prédiction du modèle SAV : probabilité qu'une panne technique déclenche un appel cette semaine.
+     Le statut distingue les pharmacies à appeler en <strong>proactif</strong> (aucun appel récent) de celles qui ont
+     déjà un dossier en cours. Cochez « A appelé » dès qu'un appel réel arrive.</p>
+
+  <div class="bar">
+    <div class="stat">Machines suivies <b id="n-total">0</b></div>
+    <div class="stat">Cibles proactives <b id="n-proactif">0</b></div>
+    <div class="stat called">Ont appelé <b id="n-called">0</b></div>
+    <div class="stat">Taux de réussite <b id="n-rate">—</b></div>
+    <div class="spacer"></div>
+    <span id="mode"></span>
+    <button id="export">Exporter les résultats (CSV)</button>
+  </div>
+
+  <div class="filters" id="filters">
+    <button data-f="all" class="active">Toutes</button>
+    <button data-f="proactif">À appeler en proactif</button>
+    <button data-f="rappel">Rappel probable</button>
+    <button data-f="encours">Appel en cours non résolu</button>
+  </div>
+  <div class="filters" id="cat-filters"></div>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th><th>Machine</th><th>Pharmacie</th><th>Risque</th>
+          <th>Panne probable & signaux observés</th><th>Statut d'appel</th><th>A appelé&nbsp;?</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <footer>Généré par la pipeline de prédiction SAV. « Signaux observés » = codes d'erreur réellement remontés par la machine
+    sur les 7 derniers jours (avec l'opération concernée), pertes de grippers et coupures de télémétrie. Survolez la catégorie
+    pour le détail des probabilités par type de panne. « dégradée 90 j » = au moins un appel technique dans les 90 derniers jours.</footer>
+</main>
+
+<script>
+const SEMAINE = "2026-07-15";
+const DATA = [{"mac": "1246", "nom": "Pharmacie du Centre", "risque": 39.6, "cat_keys": ["capteurs_optique", "electronique_alim", "informatique_pc", "logiciel"], "cat": "Capteurs / caméra / scan, Électronique / alimentation, Informatique / PC, Logiciel / configuration", "detail": {"Bras / gripper (OMEGA)": 6.3, "Ascenseur": 0.2, "Tapis / convoyage / rails": 4.3, "Capteurs / caméra / scan": 3.9, "Électronique / alimentation": 2.7, "Informatique / PC": 8.0, "Logiciel / configuration": 21.0, "PALM (terminal portable)": 0.6}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 13 j)", "diag": "erreur -32103 (PUTA) ×34 sur 7 j · erreur -6 (GET) ×19 sur 7 j · erreur -32103 (PUTE) ×4 sur 7 j"}, {"mac": "971", "nom": "Pharmacie Principale", "risque": 38.3, "cat_keys": ["capteurs_optique", "informatique_pc", "logiciel"], "cat": "Capteurs / caméra / scan, Informatique / PC, Logiciel / configuration", "detail": {"Bras / gripper (OMEGA)": 4.7, "Ascenseur": 0.3, "Tapis / convoyage / rails": 4.0, "Capteurs / caméra / scan": 4.6, "Électronique / alimentation": 1.4, "Informatique / PC": 8.7, "Logiciel / configuration": 21.0, "PALM (terminal portable)": 0.3}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 7 j)", "diag": "erreur 9006 (GET) ×1796 sur 7 j · erreur 9108 (INVE) ×1246 sur 7 j · erreur 9122 (INVA) ×654 sur 7 j"}, {"mac": "1379", "nom": "Pharmacie du Chêne Maillard", "risque": 37.8, "cat_keys": ["informatique_pc", "logiciel"], "cat": "Informatique / PC, Logiciel / configuration", "detail": {"Bras / gripper (OMEGA)": 4.4, "Ascenseur": 0.2, "Tapis / convoyage / rails": 4.1, "Capteurs / caméra / scan": 2.2, "Électronique / alimentation": 2.4, "Informatique / PC": 8.6, "Logiciel / configuration": 21.8, "PALM (terminal portable)": 0.3}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 6 j)", "diag": "erreur 9503 (IDPK) ×86 sur 7 j · erreur 9108 (INVE) ×65 sur 7 j · erreur -6 (GET) ×29 sur 7 j"}, {"mac": "1567", "nom": "Pharmacie de Grandchamp des Fontaines", "risque": 37.3, "cat_keys": ["capteurs_optique", "logiciel"], "cat": "Capteurs / caméra / scan, Logiciel / configuration", "detail": {"Bras / gripper (OMEGA)": 5.7, "Ascenseur": 0.5, "Tapis / convoyage / rails": 4.9, "Capteurs / caméra / scan": 4.2, "Électronique / alimentation": 2.3, "Informatique / PC": 5.3, "Logiciel / configuration": 20.6, "PALM (terminal portable)": 0.3}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 8 j)", "diag": "erreur 9108 (INVE) ×622 sur 7 j · erreur -32063 (GET) ×122 sur 7 j · erreur 9122 (INVA) ×84 sur 7 j"}, {"mac": "1477", "nom": "Pharmacie Saint-Marc", "risque": 37.1, "cat_keys": ["logiciel"], "cat": "Logiciel / configuration", "detail": {"Bras / gripper (OMEGA)": 4.6, "Ascenseur": 0.2, "Tapis / convoyage / rails": 5.3, "Capteurs / caméra / scan": 2.2, "Électronique / alimentation": 1.9, "Informatique / PC": 5.5, "Logiciel / configuration": 22.8, "PALM (terminal portable)": 0.3}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 8 j)", "diag": "erreur 9122 (INVA) ×340 sur 7 j · erreur 9501 (IDPK) ×190 sur 7 j · erreur 9006 (GET) ×182 sur 7 j"}, {"mac": "1453", "nom": "Pharmacie des Pépinières", "risque": 37.0, "cat_keys": ["logiciel"], "cat": "Logiciel / configuration", "detail": {"Bras / gripper (OMEGA)": 4.1, "Ascenseur": 0.6, "Tapis / convoyage / rails": 5.3, "Capteurs / caméra / scan": 2.5, "Électronique / alimentation": 2.2, "Informatique / PC": 4.4, "Logiciel / configuration": 23.3, "PALM (terminal portable)": 0.2}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 7 j)", "diag": "erreur 9108 (INVE) ×1671 sur 7 j · erreur 9101 (INVE) ×1036 sur 7 j · erreur -32063 (GET) ×824 sur 7 j"}, {"mac": "1371", "nom": "Grande Pharmacie", "risque": 36.7, "cat_keys": ["ascenseur", "electronique_alim", "gripper_bras", "logiciel"], "cat": "Ascenseur, Électronique / alimentation, Bras / gripper (OMEGA), Logiciel / configuration", "detail": {"Bras / gripper (OMEGA)": 7.1, "Ascenseur": 0.9, "Tapis / convoyage / rails": 4.2, "Capteurs / caméra / scan": 2.8, "Électronique / alimentation": 2.7, "Informatique / PC": 5.5, "Logiciel / configuration": 19.5, "PALM (terminal portable)": 0.3}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 6 j)", "diag": "erreur 9122 (INVA) ×62 sur 7 j · erreur 9005 (GET) ×44 sur 7 j · erreur 9503 (IDPK) ×37 sur 7 j"}, {"mac": "1516", "nom": "Pharmacie du Pont Neuf", "risque": 35.8, "cat_keys": ["capteurs_optique", "convoyage_tapis"], "cat": "Capteurs / caméra / scan, Tapis / convoyage / rails", "detail": {"Bras / gripper (OMEGA)": 5.1, "Ascenseur": 0.3, "Tapis / convoyage / rails": 6.4, "Capteurs / caméra / scan": 3.1, "Électronique / alimentation": 2.6, "Informatique / PC": 6.1, "Logiciel / configuration": 18.0, "PALM (terminal portable)": 0.2}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 11 j)", "diag": "erreur 9005 (GET) ×82 sur 7 j · erreur -32063 (GET) ×70 sur 7 j · erreur 9503 (IDPK) ×53 sur 7 j"}, {"mac": "1489", "nom": "Pharmacie du Dix", "risque": 35.7, "cat_keys": ["electronique_alim", "gripper_bras"], "cat": "Électronique / alimentation, Bras / gripper (OMEGA)", "detail": {"Bras / gripper (OMEGA)": 7.4, "Ascenseur": 0.4, "Tapis / convoyage / rails": 4.5, "Capteurs / caméra / scan": 2.4, "Électronique / alimentation": 4.1, "Informatique / PC": 5.5, "Logiciel / configuration": 17.2, "PALM (terminal portable)": 0.3}, "degradee": true, "statut": "proactif", "statut_lbl": "aucun appel récent (dernier : 20 j) → appel proactif utile", "diag": "erreur 9108 (INVE) ×437 sur 7 j · erreur 9122 (INVA) ×130 sur 7 j · erreur -6 (GET) ×83 sur 7 j"}, {"mac": "1543", "nom": "Pharmacie de la Céramique", "risque": 35.0, "cat_keys": ["capteurs_optique", "gripper_bras"], "cat": "Capteurs / caméra / scan, Bras / gripper (OMEGA)", "detail": {"Bras / gripper (OMEGA)": 7.0, "Ascenseur": 0.5, "Tapis / convoyage / rails": 3.9, "Capteurs / caméra / scan": 6.4, "Électronique / alimentation": 1.9, "Informatique / PC": 4.9, "Logiciel / configuration": 15.9, "PALM (terminal portable)": 0.3}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 13 j)", "diag": "erreur 9108 (INVE) ×290 sur 7 j · erreur -32063 (GET) ×74 sur 7 j · erreur 9005 (GET) ×63 sur 7 j"}, {"mac": "1495", "nom": "PHARMACIE PHILIPPE LAMBERT", "risque": 35.0, "cat_keys": ["convoyage_tapis", "gripper_bras"], "cat": "Tapis / convoyage / rails, Bras / gripper (OMEGA)", "detail": {"Bras / gripper (OMEGA)": 7.9, "Ascenseur": 0.4, "Tapis / convoyage / rails": 5.9, "Capteurs / caméra / scan": 2.9, "Électronique / alimentation": 2.1, "Informatique / PC": 5.6, "Logiciel / configuration": 15.8, "PALM (terminal portable)": 0.3}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 11 j)", "diag": "erreur 9005 (GET) ×71 sur 7 j · erreur 9108 (INVE) ×57 sur 7 j · erreur 9503 (IDPK) ×51 sur 7 j"}, {"mac": "1457", "nom": "Pharmacie des Bas Clos", "risque": 34.9, "cat_keys": ["informatique_pc", "logiciel"], "cat": "Informatique / PC, Logiciel / configuration", "detail": {"Bras / gripper (OMEGA)": 3.0, "Ascenseur": 0.3, "Tapis / convoyage / rails": 4.8, "Capteurs / caméra / scan": 2.3, "Électronique / alimentation": 2.3, "Informatique / PC": 7.0, "Logiciel / configuration": 20.3, "PALM (terminal portable)": 0.3}, "degradee": true, "statut": "proactif", "statut_lbl": "aucun appel récent (dernier : 20 j) → appel proactif utile", "diag": "erreur -6 (GET) ×308 sur 7 j · erreur 9108 (INVE) ×304 sur 7 j · erreur 9122 (INVA) ×272 sur 7 j"}, {"mac": "1507", "nom": "Pharmacie Lafayette Colombia", "risque": 34.3, "cat_keys": ["electronique_alim", "informatique_pc"], "cat": "Électronique / alimentation, Informatique / PC", "detail": {"Bras / gripper (OMEGA)": 5.8, "Ascenseur": 0.2, "Tapis / convoyage / rails": 4.6, "Capteurs / caméra / scan": 2.0, "Électronique / alimentation": 3.2, "Informatique / PC": 10.0, "Logiciel / configuration": 13.9, "PALM (terminal portable)": 0.2}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 12 j)", "diag": "erreur 9122 (INVA) ×830 sur 7 j · erreur 9501 (IDPK) ×441 sur 7 j · erreur -32063 (GET) ×405 sur 7 j"}, {"mac": "1430", "nom": "Démonté Pharmacie de la Mairie", "risque": 34.3, "cat_keys": ["electronique_alim"], "cat": "Électronique / alimentation", "detail": {"Bras / gripper (OMEGA)": 4.9, "Ascenseur": 0.4, "Tapis / convoyage / rails": 5.3, "Capteurs / caméra / scan": 2.8, "Électronique / alimentation": 2.8, "Informatique / PC": 4.7, "Logiciel / configuration": 18.4, "PALM (terminal portable)": 0.4}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 9 j)", "diag": "erreur 9300 (PACK) ×812 sur 7 j · erreur 9122 (INVA) ×483 sur 7 j · erreur -6 (GET) ×275 sur 7 j"}, {"mac": "1390", "nom": "Pharmacie de la Gare", "risque": 33.3, "cat_keys": ["convoyage_tapis"], "cat": "Tapis / convoyage / rails", "detail": {"Bras / gripper (OMEGA)": 6.2, "Ascenseur": 0.4, "Tapis / convoyage / rails": 5.9, "Capteurs / caméra / scan": 2.8, "Électronique / alimentation": 2.4, "Informatique / PC": 4.8, "Logiciel / configuration": 15.4, "PALM (terminal portable)": 0.6}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 13 j)", "diag": "erreur -32063 (GET) ×145 sur 7 j · erreur -6 (GET) ×102 sur 7 j · erreur -32103 (PUTA) ×54 sur 7 j"}, {"mac": "1123", "nom": "Pharmacie Trigona", "risque": 32.8, "cat_keys": ["informatique_pc"], "cat": "Informatique / PC", "detail": {"Bras / gripper (OMEGA)": 3.4, "Ascenseur": 0.3, "Tapis / convoyage / rails": 3.7, "Capteurs / caméra / scan": 2.3, "Électronique / alimentation": 2.2, "Informatique / PC": 8.5, "Logiciel / configuration": 16.6, "PALM (terminal portable)": 0.7}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 8 j)", "diag": "erreur -6 (GET) ×629 sur 7 j · erreur 9503 (IDPK) ×515 sur 7 j · erreur 9501 (IDPK) ×161 sur 7 j"}, {"mac": "948", "nom": "Pharmacie Baggersee", "risque": 32.2, "cat_keys": ["convoyage_tapis", "gripper_bras"], "cat": "Tapis / convoyage / rails, Bras / gripper (OMEGA)", "detail": {"Bras / gripper (OMEGA)": 7.7, "Ascenseur": 0.4, "Tapis / convoyage / rails": 7.3, "Capteurs / caméra / scan": 2.6, "Électronique / alimentation": 2.5, "Informatique / PC": 6.5, "Logiciel / configuration": 9.7, "PALM (terminal portable)": 0.7}, "degradee": true, "statut": "proactif", "statut_lbl": "aucun appel récent (dernier : 20 j) → appel proactif utile", "diag": "erreur -32063 (GET) ×234 sur 7 j · erreur -6 (GET) ×197 sur 7 j · erreur -32103 (PUTA) ×63 sur 7 j"}, {"mac": "1326", "nom": "Pharmacie Lemanissier", "risque": 31.7, "cat_keys": ["capteurs_optique"], "cat": "Capteurs / caméra / scan", "detail": {"Bras / gripper (OMEGA)": 3.9, "Ascenseur": 0.5, "Tapis / convoyage / rails": 5.1, "Capteurs / caméra / scan": 4.8, "Électronique / alimentation": 2.0, "Informatique / PC": 4.5, "Logiciel / configuration": 15.2, "PALM (terminal portable)": 0.5}, "degradee": true, "statut": "proactif", "statut_lbl": "aucun appel récent (dernier : 15 j) → appel proactif utile", "diag": "plus de télémétrie depuis 4 j · erreur -6 (GET) ×180 sur 7 j · erreur 9503 (IDPK) ×118 sur 7 j"}, {"mac": "1478", "nom": "Pharmacie Ti Al Louzou", "risque": 31.5, "cat_keys": ["gripper_bras"], "cat": "Bras / gripper (OMEGA)", "detail": {"Bras / gripper (OMEGA)": 6.7, "Ascenseur": 0.4, "Tapis / convoyage / rails": 5.2, "Capteurs / caméra / scan": 2.5, "Électronique / alimentation": 2.2, "Informatique / PC": 4.9, "Logiciel / configuration": 14.0, "PALM (terminal portable)": 0.3}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 10 j)", "diag": "erreur 9122 (INVA) ×596 sur 7 j · erreur 9300 (PACK) ×558 sur 7 j · erreur -32063 (GET) ×278 sur 7 j"}, {"mac": "1499", "nom": "Pharmacie de Courdemanche", "risque": 31.3, "cat_keys": ["ascenseur"], "cat": "Ascenseur", "detail": {"Bras / gripper (OMEGA)": 6.2, "Ascenseur": 0.8, "Tapis / convoyage / rails": 4.1, "Capteurs / caméra / scan": 2.7, "Électronique / alimentation": 1.8, "Informatique / PC": 3.5, "Logiciel / configuration": 16.2, "PALM (terminal portable)": 0.4}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 6 j)", "diag": "erreur 9104 (INVE) ×170 sur 7 j · erreur -6 (GET) ×126 sur 7 j · erreur 9122 (INVA) ×113 sur 7 j"}, {"mac": "1202", "nom": "Démonté Selarl Pharmacie Daphné", "risque": 31.2, "cat_keys": ["informatique_pc"], "cat": "Informatique / PC", "detail": {"Bras / gripper (OMEGA)": 4.6, "Ascenseur": 0.2, "Tapis / convoyage / rails": 5.1, "Capteurs / caméra / scan": 2.8, "Électronique / alimentation": 2.1, "Informatique / PC": 7.2, "Logiciel / configuration": 13.5, "PALM (terminal portable)": 0.3}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 7 j)", "diag": "erreur 9122 (INVA) ×820 sur 7 j · erreur 9101 (INVE) ×472 sur 7 j · erreur -32063 (GET) ×424 sur 7 j"}, {"mac": "1439", "nom": "Pharmacie Centrale", "risque": 30.5, "cat_keys": ["electronique_alim"], "cat": "Électronique / alimentation", "detail": {"Bras / gripper (OMEGA)": 5.7, "Ascenseur": 0.3, "Tapis / convoyage / rails": 3.5, "Capteurs / caméra / scan": 1.6, "Électronique / alimentation": 4.2, "Informatique / PC": 5.2, "Logiciel / configuration": 14.1, "PALM (terminal portable)": 0.3}, "degradee": true, "statut": "proactif", "statut_lbl": "aucun appel récent (dernier : 33 j) → appel proactif utile", "diag": "erreur -32063 (GET) ×397 sur 7 j · erreur -6 (GET) ×370 sur 7 j · erreur -25 (GET) ×24 sur 7 j"}, {"mac": "1441", "nom": "DEMONTE Selarl Grande Pharmacie des Collines", "risque": 30.1, "cat_keys": ["convoyage_tapis"], "cat": "Tapis / convoyage / rails", "detail": {"Bras / gripper (OMEGA)": 3.0, "Ascenseur": 0.2, "Tapis / convoyage / rails": 6.2, "Capteurs / caméra / scan": 1.8, "Électronique / alimentation": 1.5, "Informatique / PC": 5.1, "Logiciel / configuration": 15.9, "PALM (terminal portable)": 0.2}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 7 j)", "diag": "erreur 9106 (INVE) ×826 sur 7 j · erreur 9122 (INVA) ×389 sur 7 j · erreur 9501 (IDPK) ×269 sur 7 j"}, {"mac": "1421", "nom": "Pharmacie du Bourg", "risque": 30.0, "cat_keys": ["informatique_pc"], "cat": "Informatique / PC", "detail": {"Bras / gripper (OMEGA)": 3.4, "Ascenseur": 0.3, "Tapis / convoyage / rails": 3.5, "Capteurs / caméra / scan": 2.1, "Électronique / alimentation": 1.6, "Informatique / PC": 7.6, "Logiciel / configuration": 15.3, "PALM (terminal portable)": 0.2}, "degradee": true, "statut": "proactif", "statut_lbl": "aucun appel récent (dernier : 16 j) → appel proactif utile", "diag": "erreur 9501 (IDPK) ×2117 sur 7 j · erreur -32063 (GET) ×1883 sur 7 j · erreur 9108 (INVE) ×837 sur 7 j"}, {"mac": "1467", "nom": "Pharmacie Carnot", "risque": 29.5, "cat_keys": ["gripper_bras"], "cat": "Bras / gripper (OMEGA)", "detail": {"Bras / gripper (OMEGA)": 7.8, "Ascenseur": 0.4, "Tapis / convoyage / rails": 5.0, "Capteurs / caméra / scan": 1.7, "Électronique / alimentation": 2.1, "Informatique / PC": 3.6, "Logiciel / configuration": 12.5, "PALM (terminal portable)": 0.4}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 14 j)", "diag": "erreur -32063 (GET) ×140 sur 7 j · erreur -6 (GET) ×25 sur 7 j · erreur -32103 (PUTE) ×7 sur 7 j"}, {"mac": "1450", "nom": "Pharmacie de la Manse", "risque": 29.0, "cat_keys": ["capteurs_optique"], "cat": "Capteurs / caméra / scan", "detail": {"Bras / gripper (OMEGA)": 3.1, "Ascenseur": 0.3, "Tapis / convoyage / rails": 5.0, "Capteurs / caméra / scan": 3.2, "Électronique / alimentation": 2.1, "Informatique / PC": 5.0, "Logiciel / configuration": 13.8, "PALM (terminal portable)": 0.3}, "degradee": true, "statut": "proactif", "statut_lbl": "aucun appel récent (dernier : 23 j) → appel proactif utile", "diag": "erreur 9122 (INVA) ×778 sur 7 j · erreur 9503 (IDPK) ×391 sur 7 j · erreur 9101 (INVE) ×285 sur 7 j"}, {"mac": "1529", "nom": "Pharmacie de la Découverte", "risque": 28.5, "cat_keys": ["convoyage_tapis"], "cat": "Tapis / convoyage / rails", "detail": {"Bras / gripper (OMEGA)": 2.8, "Ascenseur": 0.3, "Tapis / convoyage / rails": 6.2, "Capteurs / caméra / scan": 2.6, "Électronique / alimentation": 1.7, "Informatique / PC": 4.2, "Logiciel / configuration": 13.8, "PALM (terminal portable)": 0.4}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 12 j)", "diag": "erreur -32063 (GET) ×2384 sur 7 j · erreur -121 (MOVE) ×1965 sur 7 j · erreur 9101 (INVE) ×961 sur 7 j"}, {"mac": "1250", "nom": "DEMONTE Pharmacie Cantonale Selarl", "risque": 28.1, "cat_keys": ["materiel_palm"], "cat": "PALM (terminal portable)", "detail": {"Bras / gripper (OMEGA)": 2.6, "Ascenseur": 0.5, "Tapis / convoyage / rails": 5.8, "Capteurs / caméra / scan": 1.8, "Électronique / alimentation": 2.1, "Informatique / PC": 4.1, "Logiciel / configuration": 9.3, "PALM (terminal portable)": 5.8}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 5 j)", "diag": "erreur -111 (MOVE) ×1283 sur 7 j · erreur -110 (MOVE) ×734 sur 7 j · erreur -32063 (GET) ×165 sur 7 j"}, {"mac": "1418", "nom": "Grde Pcie St. Genis Centre", "risque": 27.7, "cat_keys": ["convoyage_tapis"], "cat": "Tapis / convoyage / rails", "detail": {"Bras / gripper (OMEGA)": 4.0, "Ascenseur": 0.5, "Tapis / convoyage / rails": 7.3, "Capteurs / caméra / scan": 1.3, "Électronique / alimentation": 2.1, "Informatique / PC": 4.2, "Logiciel / configuration": 11.6, "PALM (terminal portable)": 0.2}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 8 j)", "diag": "erreur -32063 (GET) ×257 sur 7 j · erreur -6 (GET) ×160 sur 7 j · erreur -105 (MOVE) ×49 sur 7 j"}, {"mac": "1321", "nom": "Pharmacie des Bâtes", "risque": 27.6, "cat_keys": ["electronique_alim"], "cat": "Électronique / alimentation", "detail": {"Bras / gripper (OMEGA)": 4.4, "Ascenseur": 0.4, "Tapis / convoyage / rails": 5.3, "Capteurs / caméra / scan": 2.5, "Électronique / alimentation": 2.8, "Informatique / PC": 5.2, "Logiciel / configuration": 10.0, "PALM (terminal portable)": 0.7}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 12 j)", "diag": "erreur 9122 (INVA) ×309 sur 7 j · erreur 9503 (IDPK) ×234 sur 7 j · erreur -32063 (GET) ×175 sur 7 j"}, {"mac": "1349", "nom": "Pharmacie Flaux Huguet", "risque": 24.9, "cat_keys": ["convoyage_tapis"], "cat": "Tapis / convoyage / rails", "detail": {"Bras / gripper (OMEGA)": 3.6, "Ascenseur": 0.8, "Tapis / convoyage / rails": 6.3, "Capteurs / caméra / scan": 2.1, "Électronique / alimentation": 2.0, "Informatique / PC": 3.9, "Logiciel / configuration": 7.9, "PALM (terminal portable)": 1.3}, "degradee": true, "statut": "proactif", "statut_lbl": "aucun appel récent (dernier : 50 j) → appel proactif utile", "diag": "erreur -32063 (GET) ×96 sur 7 j · erreur -32103 (PUTA) ×95 sur 7 j · erreur -25 (GET) ×49 sur 7 j"}, {"mac": "1364", "nom": "Pharmacie Prissé", "risque": 24.2, "cat_keys": ["ascenseur"], "cat": "Ascenseur", "detail": {"Bras / gripper (OMEGA)": 2.6, "Ascenseur": 0.8, "Tapis / convoyage / rails": 2.9, "Capteurs / caméra / scan": 1.7, "Électronique / alimentation": 2.2, "Informatique / PC": 5.4, "Logiciel / configuration": 10.9, "PALM (terminal portable)": 0.2}, "degradee": true, "statut": "proactif", "statut_lbl": "aucun appel récent (dernier : 58 j) → appel proactif utile", "diag": "erreur 9501 (IDPK) ×1361 sur 7 j · erreur 9122 (INVA) ×1048 sur 7 j · erreur 9108 (INVE) ×897 sur 7 j"}, {"mac": "1273", "nom": "Pcie Boulevard Sud", "risque": 24.0, "cat_keys": ["materiel_palm"], "cat": "PALM (terminal portable)", "detail": {"Bras / gripper (OMEGA)": 2.6, "Ascenseur": 0.3, "Tapis / convoyage / rails": 5.8, "Capteurs / caméra / scan": 2.7, "Électronique / alimentation": 2.1, "Informatique / PC": 4.7, "Logiciel / configuration": 6.6, "PALM (terminal portable)": 2.0}, "degradee": true, "statut": "proactif", "statut_lbl": "aucun appel récent (dernier : 16 j) → appel proactif utile", "diag": "erreur 9122 (INVA) ×1255 sur 7 j · erreur 9005 (GET) ×288 sur 7 j · erreur -32063 (GET) ×171 sur 7 j"}, {"mac": "1334", "nom": "Pharmacie Renaud", "risque": 22.8, "cat_keys": ["electronique_alim", "materiel_palm"], "cat": "Électronique / alimentation, PALM (terminal portable)", "detail": {"Bras / gripper (OMEGA)": 5.7, "Ascenseur": 0.5, "Tapis / convoyage / rails": 3.5, "Capteurs / caméra / scan": 1.4, "Électronique / alimentation": 2.7, "Informatique / PC": 4.1, "Logiciel / configuration": 6.1, "PALM (terminal portable)": 1.5}, "degradee": true, "statut": "proactif", "statut_lbl": "aucun appel récent (dernier : 60 j) → appel proactif utile", "diag": "erreur -32063 (GET) ×85 sur 7 j · erreur -6 (GET) ×39 sur 7 j · erreur -106 (MOVE) ×5 sur 7 j"}, {"mac": "1289", "nom": "Pharmacie de la Halle au Blé", "risque": 22.6, "cat_keys": ["ascenseur"], "cat": "Ascenseur", "detail": {"Bras / gripper (OMEGA)": 3.5, "Ascenseur": 0.8, "Tapis / convoyage / rails": 4.3, "Capteurs / caméra / scan": 2.1, "Électronique / alimentation": 1.8, "Informatique / PC": 4.6, "Logiciel / configuration": 7.1, "PALM (terminal portable)": 0.7}, "degradee": true, "statut": "proactif", "statut_lbl": "aucun appel récent (dernier : 19 j) → appel proactif utile", "diag": "erreur 9400 (RGT) ×1876 sur 7 j · erreur -6 (GET) ×168 sur 7 j · erreur -32063 (GET) ×126 sur 7 j"}, {"mac": "1108", "nom": "Pharmacie des senteurs", "risque": 22.5, "cat_keys": ["ascenseur"], "cat": "Ascenseur", "detail": {"Bras / gripper (OMEGA)": 2.0, "Ascenseur": 1.5, "Tapis / convoyage / rails": 3.7, "Capteurs / caméra / scan": 2.8, "Électronique / alimentation": 1.9, "Informatique / PC": 4.6, "Logiciel / configuration": 7.5, "PALM (terminal portable)": 1.0}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 7 j)", "diag": "erreur 9122 (INVA) ×811 sur 7 j · erreur 9004 (PUTA) ×589 sur 7 j · erreur 9503 (IDPK) ×563 sur 7 j"}, {"mac": "1260", "nom": "Pharmacie de la Marine", "risque": 22.5, "cat_keys": ["ascenseur"], "cat": "Ascenseur", "detail": {"Bras / gripper (OMEGA)": 3.1, "Ascenseur": 0.9, "Tapis / convoyage / rails": 4.7, "Capteurs / caméra / scan": 2.5, "Électronique / alimentation": 1.9, "Informatique / PC": 3.9, "Logiciel / configuration": 7.4, "PALM (terminal portable)": 0.4}, "degradee": true, "statut": "proactif", "statut_lbl": "aucun appel récent (dernier : 29 j) → appel proactif utile", "diag": "erreur 9108 (INVE) ×1304 sur 7 j · erreur -6 (GET) ×221 sur 7 j · erreur -32063 (GET) ×76 sur 7 j"}, {"mac": "1589", "nom": "Pharmacie Grignon Notre Dame", "risque": 22.2, "cat_keys": ["capteurs_optique"], "cat": "Capteurs / caméra / scan", "detail": {"Bras / gripper (OMEGA)": 3.0, "Ascenseur": 0.3, "Tapis / convoyage / rails": 4.2, "Capteurs / caméra / scan": 3.1, "Électronique / alimentation": 1.7, "Informatique / PC": 2.6, "Logiciel / configuration": 9.1, "PALM (terminal portable)": 0.6}, "degradee": false, "statut": "proactif", "statut_lbl": "aucun appel récent (dernier : 98 j) → appel proactif utile", "diag": "erreur 9300 (PACK) ×1019 sur 7 j · erreur 9302 (PACK) ×998 sur 7 j · erreur 9122 (INVA) ×271 sur 7 j"}, {"mac": "1562", "nom": "Pharmacie des Boyères", "risque": 22.1, "cat_keys": ["gripper_bras"], "cat": "Bras / gripper (OMEGA)", "detail": {"Bras / gripper (OMEGA)": 6.8, "Ascenseur": 0.5, "Tapis / convoyage / rails": 3.3, "Capteurs / caméra / scan": 1.9, "Électronique / alimentation": 1.8, "Informatique / PC": 3.7, "Logiciel / configuration": 5.8, "PALM (terminal portable)": 0.7}, "degradee": false, "statut": "proactif", "statut_lbl": "aucun appel récent (dernier : 91 j) → appel proactif utile", "diag": "erreur -32063 (GET) ×424 sur 7 j · erreur 9300 (PACK) ×167 sur 7 j · erreur 9501 (IDPK) ×138 sur 7 j"}, {"mac": "1456", "nom": "Pharmacie du Village", "risque": 21.5, "cat_keys": ["ascenseur"], "cat": "Ascenseur", "detail": {"Bras / gripper (OMEGA)": 1.8, "Ascenseur": 0.8, "Tapis / convoyage / rails": 4.0, "Capteurs / caméra / scan": 2.2, "Électronique / alimentation": 1.9, "Informatique / PC": 4.2, "Logiciel / configuration": 8.1, "PALM (terminal portable)": 0.6}, "degradee": true, "statut": "encours", "statut_lbl": "appel en cours non résolu (il y a 13 j)", "diag": "erreur -6 (GET) ×448 sur 7 j · erreur 9101 (INVE) ×366 sur 7 j · erreur 9108 (INVE) ×246 sur 7 j"}, {"mac": "1534", "nom": "Pharmacie des Salines", "risque": 21.2, "cat_keys": ["ascenseur"], "cat": "Ascenseur", "detail": {"Bras / gripper (OMEGA)": 3.7, "Ascenseur": 0.8, "Tapis / convoyage / rails": 3.8, "Capteurs / caméra / scan": 2.4, "Électronique / alimentation": 1.8, "Informatique / PC": 4.0, "Logiciel / configuration": 6.5, "PALM (terminal portable)": 0.3}, "degradee": true, "statut": "proactif", "statut_lbl": "aucun appel récent (dernier : 16 j) → appel proactif utile", "diag": "erreur 9006 (GET) ×723 sur 7 j · erreur -32063 (GET) ×412 sur 7 j · erreur 9501 (IDPK) ×394 sur 7 j"}, {"mac": "758", "nom": "Pharmacie Montbroussous", "risque": 19.4, "cat_keys": ["materiel_palm"], "cat": "PALM (terminal portable)", "detail": {"Bras / gripper (OMEGA)": 2.0, "Ascenseur": 0.3, "Tapis / convoyage / rails": 4.8, "Capteurs / caméra / scan": 2.4, "Électronique / alimentation": 2.0, "Informatique / PC": 3.9, "Logiciel / configuration": 4.1, "PALM (terminal portable)": 1.6}, "degradee": true, "statut": "proactif", "statut_lbl": "aucun appel récent (dernier : 29 j) → appel proactif utile", "diag": "erreur 9122 (INVA) ×1752 sur 7 j · erreur 9006 (GET) ×673 sur 7 j · erreur 9501 (IDPK) ×326 sur 7 j"}, {"mac": "1411", "nom": "Pharmacie du Marché", "risque": 19.3, "cat_keys": ["materiel_palm"], "cat": "PALM (terminal portable)", "detail": {"Bras / gripper (OMEGA)": 2.5, "Ascenseur": 0.8, "Tapis / convoyage / rails": 4.4, "Capteurs / caméra / scan": 1.5, "Électronique / alimentation": 2.0, "Informatique / PC": 4.4, "Logiciel / configuration": 3.8, "PALM (terminal portable)": 1.7}, "degradee": false, "statut": "proactif", "statut_lbl": "aucun appel récent (dernier : 85 j) → appel proactif utile", "diag": "erreur -119 (MOVE) ×1589 sur 7 j · erreur -32063 (GET) ×741 sur 7 j · erreur -6 (GET) ×62 sur 7 j"}, {"mac": "954", "nom": "Pharmacie Du Colibri", "risque": 18.6, "cat_keys": ["materiel_palm"], "cat": "PALM (terminal portable)", "detail": {"Bras / gripper (OMEGA)": 2.0, "Ascenseur": 0.2, "Tapis / convoyage / rails": 5.2, "Capteurs / caméra / scan": 2.2, "Électronique / alimentation": 2.0, "Informatique / PC": 4.7, "Logiciel / configuration": 1.9, "PALM (terminal portable)": 2.0}, "degradee": false, "statut": "proactif", "statut_lbl": "aucun appel récent (dernier : 113 j) → appel proactif utile", "diag": "erreur 9108 (INVE) ×678 sur 7 j · erreur 9503 (IDPK) ×180 sur 7 j · erreur 9122 (INVA) ×122 sur 7 j"}, {"mac": "1220", "nom": "Pharmacie Decoutère", "risque": 18.2, "cat_keys": ["materiel_palm"], "cat": "PALM (terminal portable)", "detail": {"Bras / gripper (OMEGA)": 2.5, "Ascenseur": 0.4, "Tapis / convoyage / rails": 4.7, "Capteurs / caméra / scan": 1.7, "Électronique / alimentation": 1.4, "Informatique / PC": 3.8, "Logiciel / configuration": 3.7, "PALM (terminal portable)": 1.4}, "degradee": false, "statut": "proactif", "statut_lbl": "aucun appel récent (dernier : 104 j) → appel proactif utile", "diag": "erreur 9122 (INVA) ×1758 sur 7 j · erreur 9503 (IDPK) ×569 sur 7 j · erreur 9300 (PACK) ×476 sur 7 j"}, {"mac": "1193", "nom": "Pharmacie du Polygone", "risque": 17.6, "cat_keys": ["materiel_palm"], "cat": "PALM (terminal portable)", "detail": {"Bras / gripper (OMEGA)": 2.8, "Ascenseur": 0.3, "Tapis / convoyage / rails": 4.0, "Capteurs / caméra / scan": 0.9, "Électronique / alimentation": 2.0, "Informatique / PC": 3.8, "Logiciel / configuration": 3.9, "PALM (terminal portable)": 1.4}, "degradee": true, "statut": "proactif", "statut_lbl": "aucun appel récent (dernier : 83 j) → appel proactif utile", "diag": "erreur -32063 (GET) ×30 sur 7 j · erreur -6 (GET) ×19 sur 7 j · erreur 9504 (IDPK) ×14 sur 7 j"}];
+const KEY = "suivi_sav_" + SEMAINE;
+const API = "suivi_appels_api.php";
+let serverMode = false;
+let state = {};
+let filter = "all";
+let catFilter = "all";
+
+function buildCatFilters() {
+  const allKeys = DATA.flatMap(d => d.cat_keys);
+  const cats = [...new Set(allKeys)];
+  const counts = Object.fromEntries(cats.map(c => [c, DATA.filter(d => d.cat_keys.includes(c)).length]));
+  cats.sort((a, b) => counts[b] - counts[a]);
+  const labelFor = (c) => { const d = DATA.find(x => x.cat_keys.includes(c)); const i = d.cat_keys.indexOf(c); return d.cat.split(", ")[i] || c; };
+  const el = document.getElementById("cat-filters");
+  el.innerHTML = '<button data-c="all" class="active">Toutes pannes</button>' +
+    cats.map(c => '<button data-c="' + c + '">' + labelFor(c) + ' (' + counts[c] + ')</button>').join("");
+}
+
+function saveLocal() { localStorage.setItem(KEY, JSON.stringify(state)); }
+function loadLocal() { try { state = JSON.parse(localStorage.getItem(KEY)) || {}; } catch { state = {}; } }
+
+async function trySync() {
+  try {
+    const r = await fetch(API + "?semaine=" + encodeURIComponent(SEMAINE), {cache: "no-store"});
+    if (!r.ok) throw 0;
+    state = await r.json() || {};
+    serverMode = true;
+    document.getElementById("mode").textContent = "Suivi partagé entre postes (serveur)";
+  } catch {
+    loadLocal();
+    document.getElementById("mode").textContent = "Suivi local à ce navigateur (pas de serveur PHP détecté)";
+  }
+}
+
+async function persist(mac) {
+  if (serverMode) {
+    try {
+      await fetch(API, {method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({semaine: SEMAINE, mac: mac, entry: state[mac] || null})});
+      return;
+    } catch {}
+  }
+  saveLocal();
+}
+
+function riskClass(p) { return p >= 30 ? "r-high" : p >= 15 ? "r-mid" : "r-low"; }
+
+function render() {
+  const tbody = document.getElementById("rows");
+  tbody.innerHTML = "";
+  let shown = 0;
+  DATA.forEach((d, i) => {
+    if (filter !== "all" && d.statut !== filter) return;
+    if (catFilter !== "all" && !d.cat_keys.includes(catFilter)) return;
+    shown++;
+    const st = state[d.mac] || {};
+    const tr = document.createElement("tr");
+    if (st.called) tr.classList.add("called");
+    const detail = Object.entries(d.detail).sort((a,b) => b[1]-a[1])
+      .map(([k,v]) => k + " : " + v.toFixed(0) + " %").join("\n");
+    tr.innerHTML =
+      '<td class="mono">' + (i+1) + '</td>' +
+      '<td class="mono">' + d.mac + '</td>' +
+      '<td><span class="nom">' + d.nom + '</span>' + (d.degradee ? '<span class="flag">déjà dégradée 90 j</span>' : '') + '</td>' +
+      '<td><div class="risk ' + riskClass(d.risque) + '">' +
+        '<div class="track"><div class="fill" style="width:' + Math.min(100, d.risque*2) + '%"></div></div>' +
+        '<span class="pct mono">' + d.risque.toFixed(0) + ' %</span></div></td>' +
+      '<td><span class="cat" title="' + detail + '">' + d.cat + '</span>' +
+        '<div class="diag">' + d.diag + '</div></td>' +
+      '<td><span class="badge ' + d.statut + '">' +
+        (d.statut === "encours" ? "En cours non résolu" : d.statut === "rappel" ? "Rappel probable" : "Proactif") +
+        '</span><span class="badge-sub">' + d.statut_lbl + '</span></td>' +
+      '<td class="check"><label><input type="checkbox" data-mac="' + d.mac + '"' + (st.called ? " checked" : "") + '>' +
+        '<span class="when">' + (st.called && st.at ? "le " + new Date(st.at).toLocaleDateString("fr-FR") : "") + '</span></label></td>';
+    tbody.appendChild(tr);
+  });
+  const called = DATA.filter(d => (state[d.mac] || {}).called).length;
+  document.getElementById("n-total").textContent = DATA.length;
+  document.getElementById("n-proactif").textContent = DATA.filter(d => d.statut === "proactif").length;
+  document.getElementById("n-called").textContent = called;
+  document.getElementById("n-rate").textContent = DATA.length ? Math.round(100*called/DATA.length) + " %" : "—";
+}
+
+document.getElementById("filters").addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  filter = b.dataset.f;
+  document.querySelectorAll("#filters button").forEach(x => x.classList.toggle("active", x === b));
   render();
-
-  /* filtres sémaphore */
-  document.querySelectorAll('.sem-card').forEach(c => c.addEventListener('click', () => {
-    const f = c.dataset.f;
-    if (f === 'ok'){ location.href = 'pharmacies.html'; return; }
-    if (semFilter === f){ semFilter='all'; c.classList.remove('active'); }
-    else { semFilter=f; document.querySelectorAll('.sem-card').forEach(x=>x.classList.remove('active')); c.classList.add('active'); }
-    render();
-  }));
-  /* filtres composant */
-  document.querySelectorAll('#compFilters .chip').forEach(ch => ch.addEventListener('click', () => {
-    document.querySelectorAll('#compFilters .chip').forEach(x=>x.classList.remove('active'));
-    ch.classList.add('active'); compFilter = ch.dataset.c; render();
-  }));
-  /* filtre par confiance */
-  document.querySelectorAll('#confFilters .chip').forEach(ch => ch.addEventListener('click', () => {
-    document.querySelectorAll('#confFilters .chip').forEach(x=>x.classList.remove('active'));
-    ch.classList.add('active'); confFilter = ch.dataset.k; render();
-  }));
-
-  /* nominal : grille de points */
-  const dg = document.getElementById('dotgrid');
-  for (let i=0;i<60;i++){ const d=document.createElement('span'); d.className='dot'; dg.appendChild(d); }
-
-  /* top erreurs — filtre fonctionnel */
-  const chart = document.getElementById('topErrChart');
-  renderHBars(chart, TOP_ERRORS.all);
-  document.getElementById('typeSel').addEventListener('change', e => renderHBars(chart, TOP_ERRORS[e.target.value]));
-
-  /* silence radio */
-  document.getElementById('muettesList').innerHTML = MUETTES.map(m => `
-    <div style="padding:11px 17px; border-bottom:1px solid var(--line); font-size:12px; ${m.pid?'cursor:pointer;':''}"
-         ${m.pid? `onclick="location.href='machine.html?m=${PHARMACIES.find(p=>p.id===m.pid).machinePrincipale}'"`:''}>
-      <div style="display:flex; justify-content:space-between; gap:10px;">
-        <b style="font-size:12px;">${m.nom}</b>
-        <span class="mono" style="color:var(--muet); font-weight:600; font-size:10.5px;">${m.t}</span>
-      </div>
-      <div style="color:var(--ink-faint); font-size:10.5px; margin-top:2px;">${m.mac} · ${m.note}</div>
-    </div>`).join('');
-
-  /* pièces fin de vie (top 3) */
-  document.getElementById('wearList').innerHTML = PIECES.slice(0,3).map(p => `
-    <div style="padding:11px 17px; border-bottom:1px solid var(--line); font-size:12px;">
-      <div style="display:flex; justify-content:space-between; gap:10px;">
-        <b>${p.piece}</b>
-        <span class="mono" style="font-size:10px; ${p.etaCls==='crit'?'color:var(--agir); font-weight:600;':p.etaCls==='warn'?'color:var(--watch);':''}">${p.eta}</span>
-      </div>
-      <div style="color:var(--ink-faint); font-size:10.5px; margin:2px 0 7px;">${p.machine} · ${p.pharma}</div>
-      <div class="wear-bar"><i class="${p.etaCls}" style="width:${p.usure}%"></i></div>
-    </div>`).join('');
 });
+
+document.getElementById("cat-filters").addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  catFilter = b.dataset.c;
+  document.querySelectorAll("#cat-filters button").forEach(x => x.classList.toggle("active", x === b));
+  render();
+});
+
+document.getElementById("rows").addEventListener("change", async (e) => {
+  const cb = e.target.closest("input[type=checkbox]");
+  if (!cb) return;
+  const mac = cb.dataset.mac;
+  if (cb.checked) state[mac] = {called: true, at: new Date().toISOString()};
+  else delete state[mac];
+  await persist(mac);
+  render();
+});
+
+document.getElementById("export").addEventListener("click", () => {
+  const lines = ["semaine;rang;mac_code;pharmacie;risque_combine;categorie_predite;statut_appel;signaux;a_appele;date_coche"];
+  DATA.forEach((d, i) => {
+    const st = state[d.mac] || {};
+    lines.push([SEMAINE, i+1, d.mac, '"' + d.nom.replace(/"/g, '""') + '"', d.risque, d.cat, d.statut,
+                '"' + d.diag.replace(/"/g, '""') + '"', st.called ? "oui" : "non", st.at || ""].join(";"));
+  });
+  const blob = new Blob(["\ufeff" + lines.join("\r\n")], {type: "text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "resultats_suivi_sav_" + SEMAINE + ".csv";
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+buildCatFilters();
+trySync().then(render);
 </script>
 </body>
 </html>
